@@ -1,11 +1,14 @@
-# Texture Creator
+# Texture Timeline
 
-A browser-based tool for composing **organic textures from energy curves**.
+A browser-based tool for designing deterministic musical textures on a beat timeline.
 
-Draw a curve of tension/release; the system distributes a configurable number
-of voices across a harmonic field and renders the result as a living dot-grid
-(time → across, pitch ↑). Energy drives density, register spread, register
-centre and activity. Gestures chain modularly into larger sections. Optional
-Web Audio playback.
+Each instrument or voice sits in its own row. Rows are built from modular rhythm
+blocks, cycle counts, and explicit pitch-change points, so the texture can be
+planned by hand instead of generated stochastically.
 
-Open `index.html` in any browser — no build step, no dependencies.
+## Files
+
+- `index.html` is the main app and the file Vercel will serve for the root route.
+- `energy.html` preserves the earlier energy-curve texture prototype.
+
+Open `index.html` in any browser. There is no build step and no package install.
