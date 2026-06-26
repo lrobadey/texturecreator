@@ -96,7 +96,7 @@
   <div class="transport">
     <span class="timecode" id="timecode">0.0 / 0.0 s</span>
     <div class="seg" id="mapSel" title="Which texture dimension the field colour shows">
-      <button data-view="energy" class="active">energy</button>
+      <button data-view="energy" class="active">dynamic</button>
       <button data-view="density">density</button>
       <button data-view="activity">activity</button>
     </div>
@@ -145,15 +145,15 @@
     </div>
 
     <div class="sec">
-      <h2>Energy → texture mapping</h2>
+      <h2>Dynamic → texture mapping</h2>
       <div class="rngpair" id="mappings"></div>
-      <div class="hint">Each pair is the value at <i>min energy</i> → <i>max energy</i>. This is the “math under the intuition.”</div>
+      <div class="hint">Each pair is the value at <i>ppp</i> → at <i>fff</i>. The dynamic is the basis; these say how the texture behaves at each end.</div>
     </div>
   </aside>
 
   <section class="stage">
     <div id="curveWrap">
-      <span class="canvLabel">energy curve — drag points · click to add · dbl-click to remove · shift = whole-curve</span>
+      <span class="canvLabel">dynamic curve (ppp–fff) — drag points (snap to dynamics) · click to add · dbl-click remove · shift = whole-curve</span>
       <canvas id="curve"></canvas>
     </div>
     <div id="fieldWrap">
@@ -174,6 +174,12 @@
 
 const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const BLACK = new Set([1,3,6,8,10]);
+
+/* energy is read as a dynamic: ppp(0) .. fff(1), evenly spaced */
+const DYNAMICS = ["ppp","pp","p","mp","mf","f","ff","fff"];
+function dynIndex(e){ return Math.max(0,Math.min(DYNAMICS.length-1,Math.round(e*(DYNAMICS.length-1)))); }
+function dynForEnergy(e){ return DYNAMICS[dynIndex(e)]; }
+function snapDyn(e){ return dynIndex(e)/(DYNAMICS.length-1); }  // quantize to a dynamic step
 
 /* ---- deterministic RNG so a texture is a stable "score", not random flicker */
 function mulberry32(a){
@@ -326,11 +332,14 @@ function drawCurve(){
   ctx.clearRect(0,0,w,h);
   const X=u=>pad.l+u*(w-pad.l-pad.r);
   const Y=e=>h-pad.b-e*(h-pad.t-pad.b);
-  // grid
-  ctx.strokeStyle="#1c2230"; ctx.lineWidth=1; ctx.fillStyle="#5b6172"; ctx.font="10px ui-sans-serif";
-  for(let e=0;e<=1.0001;e+=0.25){
+  // dynamic-ladder grid: ppp .. fff
+  ctx.lineWidth=1; ctx.fillStyle="#7a8296";
+  ctx.font="italic 11px Georgia,'Times New Roman',serif";
+  for(let i=0;i<DYNAMICS.length;i++){
+    const e=i/(DYNAMICS.length-1);
+    ctx.strokeStyle = (i===0||i===DYNAMICS.length-1)?"#262d3d":"#161b27";
     ctx.beginPath(); ctx.moveTo(pad.l,Y(e)); ctx.lineTo(w-pad.r,Y(e)); ctx.stroke();
-    ctx.fillText(e.toFixed(2),6,Y(e)+3);
+    ctx.fillStyle="#7a8296"; ctx.fillText(DYNAMICS[i],4,Y(e)+3);
   }
   // filled curve
   ctx.beginPath();
@@ -441,7 +450,7 @@ curveCv.addEventListener("mousedown",ev=>{
   if(np.dist<12){ drag={mode:"pt", i:np.i}; }
   else {
     // insert a new point at this u
-    const p={t:pos.u,e:pos.e}; g.curve.push(p); g.curve.sort((a,b)=>a.t-b.t);
+    const p={t:pos.u,e:snapDyn(pos.e)}; g.curve.push(p); g.curve.sort((a,b)=>a.t-b.t);
     drag={mode:"pt", i:g.curve.indexOf(p)};
   }
   rebuild(); draw();
@@ -452,10 +461,10 @@ window.addEventListener("mousemove",ev=>{
   const pos=curvePos(ev);
   if(drag.mode==="all"){
     const d=pos.e-drag.startE;
-    g.curve.forEach((p,i)=> p.e=Math.max(0,Math.min(1,drag.snap[i]+d)));
+    g.curve.forEach((p,i)=> p.e=snapDyn(Math.max(0,Math.min(1,drag.snap[i]+d))));
   } else {
     const p=g.curve[drag.i];
-    p.e=pos.e;
+    p.e=snapDyn(pos.e);
     if(drag.i>0 && drag.i<g.curve.length-1){           // endpoints keep their t
       const lo=g.curve[drag.i-1].t+0.001, hi=g.curve[drag.i+1].t-0.001;
       p.t=Math.max(lo,Math.min(hi,pos.u));
@@ -542,7 +551,17 @@ function play(){
 }
 function pause(){ transport.playing=false; cancelAnimationFrame(transport.raf); playBtn.textContent="▶ play"; }
 function stop(){ pause(); transport.time=0; updateTimecode(); draw(); }
-function updateTimecode(){ timecode.textContent=transport.time.toFixed(1)+" / "+CHAIN.total.toFixed(1)+" s"; }
+function currentEnergy(){
+  for(const s of CHAIN.segs){
+    if(transport.time>=s.offset && transport.time<=s.offset+s.dur){
+      return energyAt(s.g,(transport.time-s.offset)/s.dur);
+    }
+  }
+  return 0;
+}
+function updateTimecode(){
+  timecode.textContent=transport.time.toFixed(1)+" / "+CHAIN.total.toFixed(1)+" s · "+dynForEnergy(currentEnergy());
+}
 
 const playBtn=document.getElementById("playBtn");
 const stopBtn=document.getElementById("stopBtn");
