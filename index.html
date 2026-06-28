@@ -857,6 +857,49 @@ function rhythmBeats(token){
   return rhythm.quarterBeats / beatUnitQuarterValue();
 }
 
+function sixteenthBeats(){
+  return rhythmBeats("s");
+}
+
+function snapToSixteenth(value){
+  const step = sixteenthBeats();
+  if (step <= 0 || !Number.isFinite(value)) return 0;
+  return Math.round(value / step) * step;
+}
+
+function snapDuration(value){
+  const step = sixteenthBeats();
+  return Math.max(step, snapToSixteenth(value));
+}
+
+function snapMusicalDuration(value, maxDuration = Infinity){
+  const step = sixteenthBeats();
+  const max = Number.isFinite(maxDuration)
+    ? Math.max(step, snapToSixteenth(maxDuration))
+    : Infinity;
+  const candidates = RHYTHMS
+    .map((rhythm) => rhythmBeats(rhythm.token))
+    .filter((duration) => duration <= max + 1e-9);
+  if (candidates.length === 0){
+    return Math.min(snapDuration(value), max);
+  }
+  return candidates.reduce((best, duration) => {
+    const bestScore = Math.abs(best - value);
+    const durationScore = Math.abs(duration - value);
+    if (durationScore < bestScore) return duration;
+    if (Math.abs(durationScore - bestScore) < 1e-9 && duration > best) return duration;
+    return best;
+  }, candidates[0]);
+}
+
+function snapStart(value, min, max){
+  const step = sixteenthBeats();
+  const snapped = snapToSixteenth(value);
+  const snappedMin = snapToSixteenth(min);
+  const snappedMax = Math.max(snappedMin, snapToSixteenth(max - step));
+  return clamp(snapped, snappedMin, snappedMax);
+}
+
 function formatBeats(value){
   if (!Number.isFinite(value)) return "0";
   const rounded = Math.round(value * 100) / 100;
@@ -1197,6 +1240,191 @@ function renderEvents(row, beatPx, collapsed){
   }).join("");
 }
 
+function rhythmLabelForDuration(duration){
+  const matched = RHYTHMS.find((rhythm) => Math.abs(rhythmBeats(rhythm.token) - duration) < 1e-9);
+  return matched ? matched.token : `${formatBeats(duration)}b`;
+}
+
+function cyclePatternEvents(cycle){
+  const events = [];
+  let start = 0;
+  let currentPitch = "";
+  for (let index = 0; index < cycle.blocks.length; index += 1){
+    const block = cycle.blocks[index];
+    if (block.pitchMode === "change" && block.pitch.trim()){
+      currentPitch = block.pitch.trim();
+    }
+    const duration = snapDuration(rhythmBeats(block.rhythm));
+    events.push({
+      key:block.id,
+      order:index,
+      start:snapToSixteenth(start),
+      duration,
+      rhythm:block.rhythm,
+      pitch:currentPitch
+    });
+    start += rhythmBeats(block.rhythm);
+  }
+  return events;
+}
+
+function fitEventToPattern(event, pattern){
+  const step = sixteenthBeats();
+  if (pattern <= 0) return null;
+  const start = snapStart(event.start, 0, pattern);
+  const maxDuration = Math.max(step, snapToSixteenth(pattern - start));
+  return {
+    ...event,
+    start,
+    duration:snapMusicalDuration(event.duration, maxDuration)
+  };
+}
+
+function projectEventsToPattern(events, sourcePattern, targetPattern){
+  const scale = sourcePattern > 0 ? targetPattern / sourcePattern : 1;
+  return events
+    .map((event) => fitEventToPattern({
+      ...event,
+      start:event.start * scale,
+      duration:event.duration * scale
+    }, targetPattern))
+    .filter(Boolean);
+}
+
+function eventMatchScore(source, target, sourceIndex, targetIndex, sourceCount, targetCount, pattern){
+  const sourceOrder = sourceCount <= 1 ? 0 : sourceIndex / (sourceCount - 1);
+  const targetOrder = targetCount <= 1 ? 0 : targetIndex / (targetCount - 1);
+  const metricDistance = Math.abs(source.start - target.start);
+  const durationDistance = Math.abs(source.duration - target.duration);
+  const orderDistance = Math.abs(sourceOrder - targetOrder) * Math.max(pattern, sixteenthBeats());
+  const pitchDistance = source.pitch && target.pitch && source.pitch !== target.pitch ? sixteenthBeats() : 0;
+  return metricDistance + durationDistance * .45 + orderDistance * .35 + pitchDistance;
+}
+
+function buildMorphPlan(sourceEvents, targetEvents, pattern){
+  const pairs = [];
+  const usedTargets = new Set();
+  const pairThreshold = Math.max(sixteenthBeats() * 4, pattern * .42);
+  sourceEvents.forEach((source, sourceIndex) => {
+    let bestIndex = -1;
+    let bestScore = Infinity;
+    targetEvents.forEach((target, targetIndex) => {
+      if (usedTargets.has(targetIndex)) return;
+      const score = eventMatchScore(source, target, sourceIndex, targetIndex, sourceEvents.length, targetEvents.length, pattern);
+      if (score < bestScore){
+        bestScore = score;
+        bestIndex = targetIndex;
+      }
+    });
+    if (bestIndex >= 0 && (bestScore <= pairThreshold || sourceEvents.length === targetEvents.length)){
+      usedTargets.add(bestIndex);
+      pairs.push({source, target:targetEvents[bestIndex]});
+    } else {
+      pairs.push({source, target:null});
+    }
+  });
+  targetEvents.forEach((target, targetIndex) => {
+    if (!usedTargets.has(targetIndex)){
+      pairs.push({source:null, target});
+    }
+  });
+  return pairs.sort((a, b) => {
+    const aStart = a.source ? a.source.start : a.target.start;
+    const bStart = b.source ? b.source.start : b.target.start;
+    return aStart - bStart;
+  });
+}
+
+function staggerThreshold(index, total){
+  return (index + 1) / (total + 1);
+}
+
+function morphGridValue(from, to, progress){
+  return snapToSixteenth(lerp(from, to, progress));
+}
+
+function resolvePatternEvents(events, pattern){
+  const step = sixteenthBeats();
+  const ordered = events
+    .map((event) => fitEventToPattern(event, pattern))
+    .filter(Boolean)
+    .sort((a, b) => a.start - b.start || a.order - b.order);
+  return ordered.map((event, index) => {
+    const nextStart = index < ordered.length - 1 ? ordered[index + 1].start : pattern;
+    const maxDuration = snapToSixteenth(nextStart - event.start);
+    if (maxDuration < step) return null;
+    return {
+      ...event,
+      duration:Math.min(event.duration, maxDuration)
+    };
+  }).filter(Boolean);
+}
+
+function morphPatternEvents(plan, progress, pattern){
+  const total = Math.max(plan.length, 1);
+  const events = [];
+  plan.forEach((pair, index) => {
+    const threshold = staggerThreshold(index, total);
+    if (pair.source && !pair.target){
+      if (progress >= threshold) return;
+      events.push({...pair.source, key:`${pair.source.key}|out`});
+      return;
+    }
+    if (!pair.source && pair.target){
+      if (progress < threshold) return;
+      events.push({...pair.target, key:`${pair.target.key}|in`});
+      return;
+    }
+    const source = pair.source;
+    const target = pair.target;
+    const start = morphGridValue(source.start, target.start, progress);
+    const duration = snapDuration(morphGridValue(source.duration, target.duration, progress));
+    const resolved = fitEventToPattern({
+      key:`${source.key}|${target.key}`,
+      order:source.order,
+      start,
+      duration,
+      rhythm:progress >= .65 ? target.rhythm : source.rhythm,
+      pitch:progress >= .65 ? (target.pitch || source.pitch) : (source.pitch || target.pitch)
+    }, pattern);
+    if (resolved) events.push(resolved);
+  });
+  return resolvePatternEvents(events, pattern);
+}
+
+function addRenderedEvent(events, cycleStart, pattern, rep, event, cycle, next, progress, row){
+  const step = sixteenthBeats();
+  const rng = mulberry32(hashString(`${row.id}|${cycle.id}|${rep}|${event.key}`));
+  const entropy = (next ? lerp(cycle.entropy, next.entropy, progress) : cycle.entropy) / 100;
+
+  const color = next ? blendHex(cycle.color, next.color, progress) : cycle.color;
+  const pitch = event.pitch;
+  events.push({
+    start:cycleStart + rep * pattern + event.start,
+    duration:event.duration,
+    rhythm:rhythmLabelForDuration(event.duration),
+    pitch,
+    color,
+    lane:Math.floor(rng() * 5),
+    added:false
+  });
+
+  if (event.duration >= step * 2 && rng() < entropy * .1){
+    const ornamentStart = snapStart(event.start + step, 0, pattern);
+    if (ornamentStart > event.start && ornamentStart < event.start + event.duration){
+      events.push({
+        start:cycleStart + rep * pattern + ornamentStart,
+        duration:step,
+        rhythm:"s",
+        pitch:pitch ? transposePitch(pitch, rng() < .5 ? -1 : 1) : "",
+        color,
+        lane:Math.floor(rng() * 5),
+        added:true
+      });
+    }
+  }
+}
+
 function buildRowEvents(row){
   const events = [];
   let cycleStart = 0;
@@ -1211,75 +1439,22 @@ function buildRowEvents(row){
       continue;
     }
     const transitionReps = next ? clamp(Number(cycle.transition) || 0, 0, repetitions) : 0;
-    const transitionStart = Math.max(0, repetitions - transitionReps) * pattern;
-    const transitionBeats = transitionReps * pattern;
+    const sourceEvents = resolvePatternEvents(cyclePatternEvents(cycle), pattern);
+    const targetEvents = next
+      ? projectEventsToPattern(cyclePatternEvents(next), patternBeats(next), pattern)
+      : [];
+    const morphPlan = next && transitionReps > 0
+      ? buildMorphPlan(sourceEvents, targetEvents, pattern)
+      : [];
     for (let rep = 0; rep < repetitions; rep += 1){
-      let blockStart = 0;
-      for (let blockIndexValue = 0; blockIndexValue < cycle.blocks.length; blockIndexValue += 1){
-        const block = cycle.blocks[blockIndexValue];
-        const baseDuration = rhythmBeats(block.rhythm);
-        const localStart = rep * pattern + blockStart;
-        const phase = pattern > 0 ? clamp((blockStart + baseDuration * .5) / pattern, 0, .999) : 0;
-        const mix = next && transitionBeats > 0 && localStart >= transitionStart
-          ? clamp((localStart - transitionStart + baseDuration * .5) / transitionBeats, 0, 1)
-          : 0;
-        const rng = mulberry32(hashString(`${row.id}|${cycle.id}|${rep}|${block.id}`));
-        const entropy = (next ? lerp(cycle.entropy, next.entropy, mix) : cycle.entropy) / 100;
-        const nextBlock = next ? blockAtPhase(next, phase) : null;
-        const skipChance = entropy * .14;
-        if (rng() >= skipChance){
-          let rhythm = block.rhythm;
-          let duration = baseDuration;
-          if (nextBlock && rng() < mix * .72){
-            rhythm = nextBlock.rhythm;
-          }
-          if (nextBlock){
-            duration = lerp(baseDuration, rhythmBeats(nextBlock.rhythm), mix * .65);
-          }
-          duration *= 1 + (rng() * 2 - 1) * entropy * .22;
-          duration = Math.max(.12, duration);
-
-          let pitch = pitchAtPhase(cycle, phase);
-          const nextPitch = next ? pitchAtPhase(next, phase) : "";
-          if (nextPitch && rng() < mix * .78){
-            pitch = nextPitch;
-          }
-          if (pitch && rng() < entropy * .28){
-            pitch = transposePitch(pitch, rng() < .5 ? -1 : 1);
-          }
-
-          const jitter = (rng() * 2 - 1) * Math.min(baseDuration * .33, .45) * entropy;
-          const start = clamp(cycleStart + localStart + jitter, cycleStart, cycleStart + cycleTotal - .05);
-          const color = next ? blendHex(cycle.color, next.color, mix) : cycle.color;
-          events.push({
-            start,
-            duration,
-            rhythm,
-            pitch,
-            color,
-            lane:Math.floor(rng() * 5),
-            added:false
-          });
-        }
-
-        if (rng() < entropy * .2){
-          const anchorPitch = pitchAtPhase(cycle, phase) || (next ? pitchAtPhase(next, phase) : "");
-          const addStart = cycleStart + localStart + baseDuration * (.2 + rng() * .65);
-          const addDuration = Math.max(.1, baseDuration * (.2 + rng() * .35));
-          const color = next ? blendHex(cycle.color, next.color, mix) : cycle.color;
-          events.push({
-            start:clamp(addStart, cycleStart, cycleStart + cycleTotal - .05),
-            duration:addDuration,
-            rhythm:block.rhythm,
-            pitch:anchorPitch ? transposePitch(anchorPitch, rng() < .5 ? -1 : 1) : "",
-            color,
-            lane:Math.floor(rng() * 5),
-            added:true
-          });
-        }
-
-        blockStart += baseDuration;
-      }
+      const transitionIndex = rep - (repetitions - transitionReps);
+      const progress = transitionIndex >= 0 && transitionReps > 0
+        ? (transitionIndex + 1) / transitionReps
+        : 0;
+      const repEvents = progress > 0
+        ? morphPatternEvents(morphPlan, progress, pattern)
+        : sourceEvents;
+      repEvents.forEach((event) => addRenderedEvent(events, cycleStart, pattern, rep, event, cycle, next, progress, row));
     }
     cycleStart += cycleTotal;
   }
@@ -1409,40 +1584,6 @@ function playPianoTone(when, duration, midi){
   shine.start(when);
   body.stop(when + safeDuration + .08);
   shine.stop(when + safeDuration + .08);
-}
-
-function blockAtPhase(cycle, phase){
-  const pattern = patternBeats(cycle);
-  if (pattern <= 0 || cycle.blocks.length === 0) return null;
-  const target = clamp(phase, 0, .999) * pattern;
-  let start = 0;
-  for (const block of cycle.blocks){
-    const duration = rhythmBeats(block.rhythm);
-    if (target >= start && target < start + duration){
-      return block;
-    }
-    start += duration;
-  }
-  return cycle.blocks[cycle.blocks.length - 1];
-}
-
-function pitchAtPhase(cycle, phase){
-  const pattern = patternBeats(cycle);
-  if (pattern <= 0 || cycle.blocks.length === 0) return "";
-  const target = clamp(phase, 0, .999) * pattern;
-  let start = 0;
-  let currentPitch = "";
-  for (const block of cycle.blocks){
-    if (block.pitchMode === "change" && block.pitch.trim()){
-      currentPitch = block.pitch.trim();
-    }
-    const duration = rhythmBeats(block.rhythm);
-    if (target >= start && target < start + duration){
-      return currentPitch;
-    }
-    start += duration;
-  }
-  return currentPitch;
 }
 
 const NOTE_TO_PC = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
