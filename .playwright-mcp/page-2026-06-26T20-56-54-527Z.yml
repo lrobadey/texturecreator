@@ -1,0 +1,315 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Texture Timeline" [level=1] [ref=e4]
+      - paragraph [ref=e5]: Voice cycles over a composed grid
+    - generic [ref=e6]:
+      - generic "Time signature" [ref=e7]:
+        - generic [ref=e8]:
+          - text: Beats
+          - spinbutton "Beats" [ref=e9]: "4"
+        - generic [ref=e10]: /
+        - generic [ref=e11]:
+          - text: Unit
+          - combobox "Unit" [ref=e12]:
+            - option "4" [selected]
+            - option "8"
+            - option "16"
+            - option "2"
+      - generic [ref=e13]:
+        - text: Bars
+        - spinbutton "Bars" [ref=e14]: "8"
+      - generic [ref=e15]:
+        - generic [ref=e16]: Timeline
+        - generic [ref=e17]: 32 beats shown
+      - button "+ Voice" [ref=e18] [cursor=pointer]
+  - main [ref=e19]:
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]: Voices / Cycles
+          - button "Add voice" [ref=e24] [cursor=pointer]: +
+        - generic [ref=e25]:
+          - generic [ref=e26]: m1
+          - generic [ref=e27]: m2
+          - generic [ref=e28]: m3
+          - generic [ref=e29]: m4
+          - generic [ref=e30]: m5
+          - generic [ref=e31]: m6
+          - generic [ref=e32]: m7
+          - generic [ref=e33]: m8
+          - generic [ref=e34]: m9
+          - generic [ref=e35]: "0"
+          - generic [ref=e36]: "1"
+          - generic [ref=e37]: "2"
+          - generic [ref=e38]: "3"
+          - generic [ref=e39]: "4"
+          - generic [ref=e40]: "5"
+          - generic [ref=e41]: "6"
+          - generic [ref=e42]: "7"
+          - generic [ref=e43]: "8"
+          - generic [ref=e44]: "9"
+          - generic [ref=e45]: "10"
+          - generic [ref=e46]: "11"
+          - generic [ref=e47]: "12"
+          - generic [ref=e48]: "13"
+          - generic [ref=e49]: "14"
+          - generic [ref=e50]: "15"
+          - generic [ref=e51]: "16"
+          - generic [ref=e52]: "17"
+          - generic [ref=e53]: "18"
+          - generic [ref=e54]: "19"
+          - generic [ref=e55]: "20"
+          - generic [ref=e56]: "21"
+          - generic [ref=e57]: "22"
+          - generic [ref=e58]: "23"
+          - generic [ref=e59]: "24"
+          - generic [ref=e60]: "25"
+          - generic [ref=e61]: "26"
+          - generic [ref=e62]: "27"
+          - generic [ref=e63]: "28"
+          - generic [ref=e64]: "29"
+          - generic [ref=e65]: "30"
+          - generic [ref=e66]: "31"
+          - generic [ref=e67]: "32"
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - button "Collapse Voice 1" [ref=e72] [cursor=pointer]: "-"
+            - generic [ref=e73]:
+              - text: Voice
+              - textbox "Voice" [ref=e74]: Voice 1
+            - button "Add cycle" [ref=e75] [cursor=pointer]: +
+            - button "Delete Voice 1" [ref=e76] [cursor=pointer]: x
+          - generic [ref=e77]:
+            - button "Cycle A" [ref=e78] [cursor=pointer]:
+              - generic [ref=e80]: Cycle A
+            - button "Cycle B" [ref=e81] [cursor=pointer]:
+              - generic [ref=e83]: Cycle B
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - generic [ref=e86]:
+                - text: Cycle
+                - textbox "Cycle" [ref=e87]: Cycle A
+              - generic [ref=e88]:
+                - text: Reps
+                - spinbutton "Reps" [ref=e89]: "4"
+              - generic [ref=e90]:
+                - text: Entropy
+                - slider "Entropy" [ref=e91]: "10"
+              - generic [ref=e92]:
+                - text: Transition reps
+                - spinbutton "Transition reps" [ref=e93]: "1"
+              - generic [ref=e94]:
+                - text: Color
+                - textbox "Color" [ref=e95]: "#2f7ea7"
+            - generic [ref=e96]:
+              - generic [ref=e97]:
+                - generic [ref=e98]: Pattern
+                - generic [ref=e99]: 3.5 beats
+              - generic [ref=e100]:
+                - generic [ref=e101]: Total
+                - generic [ref=e102]: 14 beats
+              - generic [ref=e103]:
+                - generic [ref=e104]: Entropy
+                - generic [ref=e105]: 10%
+              - generic [ref=e106]:
+                - generic [ref=e107]: Transition
+                - generic [ref=e108]: 1 reps
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - generic [ref=e111]:
+                  - text: Rhythm
+                  - combobox "Rhythm" [ref=e112]:
+                    - option "s"
+                    - option "e" [selected]
+                    - option "e."
+                    - option "q"
+                    - option "q."
+                    - option "h"
+                    - option "h."
+                    - option "w"
+                - generic [ref=e113]:
+                  - text: Pitch
+                  - combobox "Pitch" [ref=e114]:
+                    - option "Change" [selected]
+                    - option "Hold"
+                - generic [ref=e115]:
+                  - text: Value
+                  - textbox "Value" [ref=e116]:
+                    - /placeholder: C4
+                    - text: C4
+                - button "Delete block 1" [ref=e117] [cursor=pointer]: x
+              - generic [ref=e118]:
+                - generic [ref=e119]:
+                  - text: Rhythm
+                  - combobox "Rhythm" [ref=e120]:
+                    - option "s"
+                    - option "e" [selected]
+                    - option "e."
+                    - option "q"
+                    - option "q."
+                    - option "h"
+                    - option "h."
+                    - option "w"
+                - generic [ref=e121]:
+                  - text: Pitch
+                  - combobox "Pitch" [ref=e122]:
+                    - option "Change"
+                    - option "Hold" [selected]
+                - generic [ref=e123]:
+                  - text: Value
+                  - textbox "Value" [disabled] [ref=e124]:
+                    - /placeholder: held
+                - button "Delete block 2" [ref=e125] [cursor=pointer]: x
+              - generic [ref=e126]:
+                - generic [ref=e127]:
+                  - text: Rhythm
+                  - combobox "Rhythm" [ref=e128]:
+                    - option "s"
+                    - option "e"
+                    - option "e."
+                    - option "q" [selected]
+                    - option "q."
+                    - option "h"
+                    - option "h."
+                    - option "w"
+                - generic [ref=e129]:
+                  - text: Pitch
+                  - combobox "Pitch" [ref=e130]:
+                    - option "Change" [selected]
+                    - option "Hold"
+                - generic [ref=e131]:
+                  - text: Value
+                  - textbox "Value" [ref=e132]:
+                    - /placeholder: C4
+                    - text: D4
+                - button "Delete block 3" [ref=e133] [cursor=pointer]: x
+              - generic [ref=e134]:
+                - generic [ref=e135]:
+                  - text: Rhythm
+                  - combobox "Rhythm" [ref=e136]:
+                    - option "s"
+                    - option "e"
+                    - option "e."
+                    - option "q"
+                    - option "q." [selected]
+                    - option "h"
+                    - option "h."
+                    - option "w"
+                - generic [ref=e137]:
+                  - text: Pitch
+                  - combobox "Pitch" [ref=e138]:
+                    - option "Change"
+                    - option "Hold" [selected]
+                - generic [ref=e139]:
+                  - text: Value
+                  - textbox "Value" [disabled] [ref=e140]:
+                    - /placeholder: held
+                - button "Delete block 4" [ref=e141] [cursor=pointer]: x
+            - generic [ref=e142]:
+              - button "+ Block" [ref=e143] [cursor=pointer]
+              - button "Delete Cycle" [ref=e144] [cursor=pointer]
+        - generic [ref=e145]:
+          - generic [ref=e147] [cursor=pointer]:
+            - generic [ref=e149]: Cycle A
+            - generic [ref=e150]: 4 reps · 10%
+          - generic [ref=e152] [cursor=pointer]:
+            - generic [ref=e154]: Cycle B
+            - generic [ref=e155]: 4 reps · 28%
+          - generic [ref=e157]:
+            - strong [ref=e158]: e
+            - generic [ref=e159]: C4
+          - generic [ref=e161]:
+            - strong [ref=e162]: e
+            - generic [ref=e163]: C4
+          - generic [ref=e165]:
+            - strong [ref=e166]: q
+            - generic [ref=e167]: D4
+          - generic [ref=e169]:
+            - strong [ref=e170]: q.
+            - generic [ref=e171]: D4
+          - generic [ref=e173]:
+            - strong [ref=e174]: e
+            - generic [ref=e175]: C4
+          - generic [ref=e177]:
+            - strong [ref=e178]: e
+            - generic [ref=e179]: C4
+          - generic [ref=e181]:
+            - strong [ref=e182]: q
+            - generic [ref=e183]: D4
+          - generic [ref=e185]:
+            - strong [ref=e186]: q.
+            - generic [ref=e187]: D4
+          - generic [ref=e189]:
+            - strong [ref=e190]: e
+            - generic [ref=e191]: C4
+          - generic [ref=e193]:
+            - strong [ref=e194]: e
+            - generic [ref=e195]: C4
+          - generic [ref=e197]:
+            - strong [ref=e198]: q
+            - generic [ref=e199]: D4
+          - generic [ref=e201]:
+            - strong [ref=e202]: q.
+            - generic [ref=e203]: D4
+          - generic [ref=e205]:
+            - strong [ref=e206]: e
+            - generic [ref=e207]: C4
+          - generic [ref=e209]:
+            - strong [ref=e210]: e
+            - generic [ref=e211]: C4
+          - generic [ref=e213]:
+            - strong [ref=e214]: q
+            - generic [ref=e215]: G4
+          - generic [ref=e217]:
+            - strong [ref=e218]: q.
+            - generic [ref=e219]: D4
+          - generic [ref=e221]:
+            - strong [ref=e222]: q
+            - generic [ref=e223]: E4
+          - generic [ref=e225]:
+            - strong [ref=e226]: e
+            - generic [ref=e227]: E4
+          - generic [ref=e229]:
+            - strong [ref=e230]: e
+            - generic [ref=e231]: F#4
+          - generic [ref=e233]:
+            - strong: +e
+            - generic: F#4
+          - generic [ref=e235]:
+            - strong [ref=e236]: h
+            - generic [ref=e237]: G4
+          - generic [ref=e239]:
+            - strong [ref=e240]: q
+            - generic [ref=e241]: E4
+          - generic [ref=e243]:
+            - strong [ref=e244]: e
+            - generic [ref=e245]: E4
+          - generic [ref=e247]:
+            - strong [ref=e248]: e
+            - generic [ref=e249]: G4
+          - generic [ref=e251]:
+            - strong [ref=e252]: h
+            - generic [ref=e253]: G4
+          - generic [ref=e255]:
+            - strong [ref=e256]: e
+            - generic [ref=e257]: E4
+          - generic [ref=e259]:
+            - strong [ref=e260]: e
+            - generic [ref=e261]: G4
+          - generic [ref=e263]:
+            - strong [ref=e264]: h
+            - generic [ref=e265]: G4
+          - generic [ref=e267]:
+            - strong [ref=e268]: q
+            - generic [ref=e269]: E4
+          - generic [ref=e271]:
+            - strong [ref=e272]: e
+            - generic [ref=e273]: E4
+          - generic [ref=e275]:
+            - strong [ref=e276]: e
+            - generic [ref=e277]: G4
+          - generic [ref=e279]:
+            - strong [ref=e280]: h
+            - generic [ref=e281]: G#4

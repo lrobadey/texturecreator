@@ -3,29 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>Texture Timeline</title>
 <style>
-  @import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap");
-
   :root{
-    --bg:#f7f6f3;
+    --bg:#f6f4ef;
     --panel:#ffffff;
-    --panel-2:#fbfbfa;
-    --panel-3:#f2f0eb;
-    --line:#e6e1d9;
-    --line-strong:#c9c1b6;
-    --ink:#22211f;
-    --muted:#78736c;
-    --soft:#4d4943;
-    --accent:#111111;
+    --panel-2:#fbfaf7;
+    --panel-3:#eeebe4;
+    --ink:#23211e;
+    --soft:#4d4942;
+    --muted:#7b756b;
+    --line:#e0d9cf;
+    --line-strong:#bfb5a8;
+    --accent:#171615;
     --accent-ink:#ffffff;
-    --gold:#956400;
-    --red:#9f2f2d;
-    --blue:#1f6c9f;
-    --blue-soft:#e1f3fe;
-    --green:#346538;
-    --green-soft:#edf3ec;
-    --editor-w:390px;
+    --red:#9d3630;
+    --red-soft:#f7e8e5;
+    --gold:#90680f;
+    --editor-w:430px;
     --beat-px:44px;
     --measure-px:176px;
     --timeline-w:760px;
@@ -36,7 +32,7 @@
     min-height:100vh;
     background:var(--bg);
     color:var(--ink);
-    font:13px/1.45 "Figtree","SF Pro Display","Helvetica Neue",Arial,sans-serif;
+    font:13px/1.45 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   }
   button,input,select{font:inherit}
   button{
@@ -56,20 +52,29 @@
     color:var(--accent-ink);
     font-weight:700;
   }
-  button.danger{color:var(--red);border-color:#efd3d0}
   button.icon{
     width:32px;
     padding:0;
     display:inline-grid;
     place-items:center;
-    font-weight:700;
+    font-weight:750;
+  }
+  button.danger{
+    color:var(--red);
+    border-color:#ebd2ce;
+    background:#fffafa;
+  }
+  button:disabled,
+  input:disabled{
+    opacity:.48;
+    cursor:not-allowed;
   }
   label{
     display:flex;
     flex-direction:column;
     gap:5px;
     color:var(--muted);
-    font-size:11px;
+    font-size:10px;
     text-transform:uppercase;
     letter-spacing:.08em;
   }
@@ -82,25 +87,32 @@
     color:var(--ink);
     padding:6px 8px;
   }
+  input[type=color]{
+    padding:3px;
+    min-height:32px;
+  }
+  input[type=range]{
+    accent-color:var(--accent);
+  }
   select{appearance:auto}
   .topbar{
     position:sticky;
     top:0;
-    z-index:10;
+    z-index:20;
     display:flex;
     align-items:center;
     gap:18px;
     padding:12px 16px;
     border-bottom:1px solid var(--line);
-    background:rgba(255,255,255,.92);
+    background:rgba(255,255,255,.93);
     backdrop-filter:blur(10px);
   }
-  .brand{min-width:190px}
+  .brand{min-width:198px}
   .brand h1{
     margin:0;
     font-size:15px;
     line-height:1.1;
-    font-weight:750;
+    font-weight:780;
     letter-spacing:0;
   }
   .brand p{
@@ -123,24 +135,34 @@
     min-width:178px;
   }
   .slash{
-    color:var(--muted);
     min-height:32px;
     display:grid;
     place-items:center;
-    font-weight:700;
+    color:var(--muted);
+    font-weight:750;
   }
   .metric{
-    min-width:146px;
+    min-width:170px;
     padding:7px 10px;
     border:1px solid var(--line);
     border-radius:6px;
     background:var(--panel);
   }
-  .metric span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
-  .metric b{font-size:14px;font-variant-numeric:tabular-nums}
-  .bar-count{
-    width:82px;
+  .metric span{
+    display:block;
+    color:var(--muted);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
   }
+  .metric b{
+    display:block;
+    margin-top:1px;
+    font-size:14px;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  .bar-count{width:82px}
   .board{
     height:calc(100vh - 65px);
     overflow:auto;
@@ -158,7 +180,7 @@
   .ruler-row{
     position:sticky;
     top:0;
-    z-index:5;
+    z-index:12;
     min-height:46px;
     border-bottom:1px solid var(--line);
     background:rgba(255,255,255,.94);
@@ -168,7 +190,7 @@
   .voice-editor{
     position:sticky;
     left:0;
-    z-index:4;
+    z-index:10;
     background:var(--panel);
     border-right:1px solid var(--line);
   }
@@ -179,7 +201,7 @@
     gap:10px;
     padding:10px 14px;
     color:var(--muted);
-    font-size:11px;
+    font-size:10px;
     text-transform:uppercase;
     letter-spacing:.08em;
   }
@@ -187,8 +209,8 @@
     position:relative;
     min-height:46px;
     background:
-      repeating-linear-gradient(to right,rgba(34,33,31,.18) 0 1px,transparent 1px var(--measure-px)),
-      repeating-linear-gradient(to right,rgba(34,33,31,.06) 0 1px,transparent 1px var(--beat-px));
+      repeating-linear-gradient(to right,rgba(35,33,30,.18) 0 1px,transparent 1px var(--measure-px)),
+      repeating-linear-gradient(to right,rgba(35,33,30,.06) 0 1px,transparent 1px var(--beat-px));
   }
   .measure-label{
     position:absolute;
@@ -207,18 +229,23 @@
     font-variant-numeric:tabular-nums;
   }
   .voice-row{
-    min-height:182px;
+    min-height:238px;
     border-bottom:1px solid var(--line);
   }
   .voice-row.collapsed{
-    min-height:72px;
+    min-height:88px;
   }
   .voice-editor{
     padding:14px;
   }
+  .voice-row.collapsed .voice-editor{
+    display:flex;
+    align-items:center;
+    padding:10px 14px;
+  }
   .voice-head{
     display:grid;
-    grid-template-columns:32px minmax(0,1fr) 86px 32px;
+    grid-template-columns:32px minmax(0,1fr) 32px 32px;
     gap:8px;
     align-items:end;
     margin-bottom:12px;
@@ -230,14 +257,7 @@
     align-items:center;
     width:100%;
   }
-  .voice-row.collapsed .voice-editor{
-    display:flex;
-    align-items:center;
-    padding:10px 14px;
-  }
-  .voice-summary{
-    min-width:0;
-  }
+  .voice-summary{min-width:0}
   .voice-summary strong{
     display:block;
     overflow:hidden;
@@ -252,28 +272,75 @@
     font-size:11px;
     font-variant-numeric:tabular-nums;
   }
-  .compact-sequence{
+  .compact-cycles{
     display:flex;
-    gap:4px;
+    flex-wrap:wrap;
+    gap:5px;
     margin-top:7px;
     overflow:hidden;
   }
-  .rhythm-chip{
+  .cycle-chip{
     flex:none;
     border:1px solid var(--line);
-    border-radius:4px;
+    border-left-width:5px;
+    border-radius:6px;
     background:var(--panel-2);
     color:var(--soft);
-    padding:2px 5px;
+    padding:3px 6px;
     font-size:11px;
     line-height:1.2;
     white-space:nowrap;
   }
-  .voice-stats{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:7px;
+  .cycle-tabs{
+    display:flex;
+    gap:6px;
     margin-bottom:12px;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .cycle-tab{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    max-width:142px;
+    min-height:30px;
+    padding:5px 8px;
+    border-color:var(--line);
+    background:var(--panel-2);
+  }
+  .cycle-tab.selected{
+    background:#191816;
+    border-color:#191816;
+    color:#fff;
+  }
+  .swatch{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    flex:none;
+    box-shadow:0 0 0 1px rgba(0,0,0,.12);
+  }
+  .cycle-tab span:last-child{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .cycle-panel{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .cycle-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1.4fr) 72px 88px 96px 54px;
+    gap:7px;
+    align-items:end;
+  }
+  .cycle-stats{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:7px;
   }
   .stat{
     border:1px solid var(--line);
@@ -317,70 +384,104 @@
   .block-editor input{background:var(--panel-2)}
   .pitch-input[disabled]{
     color:#aaa39a;
-    background:#f4f2ee;
+    background:#f4f1eb;
   }
   .row-actions{
     display:flex;
     justify-content:flex-end;
-    margin-top:9px;
+    gap:8px;
   }
   .lane-cell{
     position:relative;
-    min-height:182px;
+    min-height:238px;
     background:
-      repeating-linear-gradient(to right,rgba(34,33,31,.16) 0 1px,transparent 1px var(--measure-px)),
-      repeating-linear-gradient(to right,rgba(34,33,31,.045) 0 1px,transparent 1px var(--beat-px)),
-      #fbfbfa;
+      repeating-linear-gradient(to right,rgba(35,33,30,.15) 0 1px,transparent 1px var(--measure-px)),
+      repeating-linear-gradient(to right,rgba(35,33,30,.05) 0 1px,transparent 1px var(--beat-px)),
+      #fbfaf7;
     overflow:hidden;
   }
   .voice-row.collapsed .lane-cell{
-    min-height:72px;
+    min-height:88px;
+  }
+  .cycle-region{
+    position:absolute;
+    top:0;
+    height:38px;
+    border-right:1px solid rgba(35,33,30,.18);
+    border-bottom:1px solid rgba(35,33,30,.12);
+    background:var(--cycle-bg);
+    cursor:pointer;
+    z-index:3;
+    overflow:hidden;
+  }
+  .cycle-region.selected{
+    box-shadow:inset 0 -3px 0 var(--cycle-color), inset 0 0 0 1px rgba(35,33,30,.16);
+  }
+  .cycle-region-label{
+    position:absolute;
+    inset:6px 8px auto 8px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:rgba(35,33,30,.82);
+    font-size:11px;
+    font-weight:680;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .cycle-region-label small{
+    color:rgba(35,33,30,.56);
+    font-size:10px;
+    font-weight:600;
+  }
+  .transition-band{
+    position:absolute;
+    top:0;
+    bottom:0;
+    right:0;
+    background:var(--transition-bg);
+    border-left:1px dashed rgba(35,33,30,.22);
+    pointer-events:none;
+  }
+  .voice-row.collapsed .cycle-region{
+    height:26px;
+  }
+  .voice-row.collapsed .cycle-region-label{
+    display:none;
   }
   .lane-axis{
     position:absolute;
     inset:0;
     pointer-events:none;
+    z-index:1;
   }
-  .cycle-line{
+  .repeat-line{
     position:absolute;
-    top:0;
+    top:38px;
     bottom:0;
-    border-left:1px dashed rgba(217,170,89,.55);
+    border-left:1px dashed rgba(144,104,15,.34);
   }
-  .cycle-line span{
-    position:absolute;
-    top:8px;
-    left:6px;
-    color:var(--gold);
-    font-size:10px;
-    font-variant-numeric:tabular-nums;
-    white-space:nowrap;
+  .repeat-line.cycle-boundary{
+    border-left:1px solid rgba(35,33,30,.24);
+  }
+  .voice-row.collapsed .repeat-line{
+    top:26px;
   }
   .event{
     position:absolute;
-    top:50%;
     min-width:14px;
-    height:52px;
-    transform:translateY(-50%);
-    border:1px solid #c7dde9;
+    border:1px solid var(--event-border);
     border-radius:6px;
-    background:var(--blue-soft);
+    background:var(--event-bg);
+    color:#1f1d1a;
     overflow:hidden;
+    z-index:4;
+    box-shadow:0 1px 0 rgba(255,255,255,.45) inset;
   }
-  .voice-row.collapsed .event{
-    height:28px;
-  }
-  .voice-row.collapsed .event-inner{
-    gap:0;
-    padding:0 6px;
-  }
-  .voice-row.collapsed .event span,
-  .voice-row.collapsed .cycle-line span{
-    display:none;
-  }
-  .event.change{
-    border-color:#c9d9c8;
-    background:var(--green-soft);
+  .event.added{
+    border-style:dashed;
+    opacity:.9;
   }
   .event-inner{
     display:flex;
@@ -398,18 +499,20 @@
   }
   .event span{
     display:block;
-    color:var(--muted);
+    color:rgba(35,33,30,.62);
     font-size:10px;
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .change-pin{
-    position:absolute;
-    left:0;
-    top:0;
-    bottom:0;
-    width:4px;
-    background:var(--green);
+  .voice-row.collapsed .event-inner{
+    padding:0 5px;
+    gap:0;
+  }
+  .voice-row.collapsed .event strong{
+    font-size:10px;
+  }
+  .voice-row.collapsed .event span{
+    display:none;
   }
   .empty{
     min-height:240px;
@@ -418,14 +521,15 @@
     color:var(--muted);
     border-bottom:1px solid var(--line);
   }
-  @media (max-width:760px){
-    :root{--editor-w:330px;--beat-px:38px}
+  @media (max-width:820px){
+    :root{--editor-w:350px;--beat-px:38px}
     .topbar{align-items:flex-start;flex-direction:column}
     .toolbar{margin-left:0;width:100%}
-    .metric{min-width:112px}
-    .board{height:calc(100vh - 142px)}
-    .voice-head{grid-template-columns:32px minmax(0,1fr) 76px 32px}
-    .voice-stats{grid-template-columns:1fr}
+    .metric{min-width:132px}
+    .board{height:calc(100vh - 194px)}
+    .voice-head{grid-template-columns:32px minmax(0,1fr) 32px 32px}
+    .cycle-grid{grid-template-columns:1fr 1fr}
+    .cycle-stats{grid-template-columns:1fr 1fr}
     .block-editor{grid-template-columns:1fr 1fr 1fr 32px}
   }
 </style>
@@ -434,7 +538,7 @@
 <header class="topbar">
   <div class="brand">
     <h1>Texture Timeline</h1>
-    <p>Row equations over a beat grid</p>
+    <p>Voice cycles over a composed grid</p>
   </div>
   <div class="toolbar">
     <div class="sig" aria-label="Time signature">
@@ -452,10 +556,10 @@
       </label>
     </div>
     <label class="bar-count">Bars
-      <input id="barCount" type="number" min="1" max="512" step="1" value="4">
+      <input id="barCount" type="number" min="1" max="512" step="1" value="8">
     </label>
     <div class="metric">
-      <span>Piece</span>
+      <span>Timeline</span>
       <b id="pieceLength">0 beats</b>
     </div>
     <button id="addRowTop" class="primary" type="button">+ Voice</button>
@@ -466,7 +570,7 @@
   <div class="timeline-content" id="timelineContent">
     <div class="ruler-row">
       <div class="corner">
-        <span>Equations</span>
+        <span>Voices / Cycles</span>
         <button id="addRowCorner" class="icon" type="button" aria-label="Add voice">+</button>
       </div>
       <div class="ruler" id="ruler"></div>
@@ -476,6 +580,8 @@
 </main>
 
 <script>
+"use strict";
+
 const RHYTHMS = [
   { token:"s", quarterBeats:0.25 },
   { token:"e", quarterBeats:0.5 },
@@ -483,28 +589,80 @@ const RHYTHMS = [
   { token:"q", quarterBeats:1 },
   { token:"q.", quarterBeats:1.5 },
   { token:"h", quarterBeats:2 },
-  { token:"h.", quarterBeats:3 }
+  { token:"h.", quarterBeats:3 },
+  { token:"w", quarterBeats:4 }
 ];
 
+const PALETTE = ["#2f7ea7","#b96b38","#5f8f48","#9a5fa8","#bd4540","#3f776f","#c29a27","#6a77b8"];
 const rhythmByToken = new Map(RHYTHMS.map((rhythm) => [rhythm.token, rhythm]));
+let idSeq = 0;
+
+function createId(prefix){
+  idSeq += 1;
+  return `${prefix}${idSeq.toString(36)}`;
+}
+
+function createBlock(rhythm, pitchMode, pitch){
+  return { id:createId("blk"), rhythm, pitchMode, pitch };
+}
+
+function createCycle(opts){
+  return {
+    id:createId("cyc"),
+    name:opts.name || "Cycle",
+    color:opts.color || PALETTE[0],
+    repetitions:opts.repetitions ?? 4,
+    entropy:opts.entropy ?? 12,
+    transition:opts.transition ?? 1,
+    blocks:(opts.blocks || [
+      createBlock("q","change","C4"),
+      createBlock("e","hold",""),
+      createBlock("e","change","D4")
+    ]).map((block) => ({...block}))
+  };
+}
+
+function createRow(index){
+  const first = createCycle({
+    name:"Cycle A",
+    color:PALETTE[(index - 1) % PALETTE.length],
+    repetitions:4,
+    entropy:10,
+    transition:1,
+    blocks:[
+      createBlock("e","change","C4"),
+      createBlock("e","hold",""),
+      createBlock("q","change","D4"),
+      createBlock("q.","hold","")
+    ]
+  });
+  const second = createCycle({
+    name:"Cycle B",
+    color:PALETTE[index % PALETTE.length],
+    repetitions:4,
+    entropy:28,
+    transition:0,
+    blocks:[
+      createBlock("q","change","E4"),
+      createBlock("e","hold",""),
+      createBlock("e","change","G4"),
+      createBlock("h","hold","")
+    ]
+  });
+  return {
+    id:createId("row"),
+    name:`Voice ${index}`,
+    collapsed:false,
+    selectedCycleId:first.id,
+    cycles:[first, second]
+  };
+}
+
 const state = {
   timeTop:4,
   timeBottom:4,
-  barCount:4,
-  rows:[
-    {
-      id:createId(),
-      name:"Voice 1",
-      cycles:4,
-      collapsed:false,
-      blocks:[
-        { id:createId(), rhythm:"e", pitchMode:"change", pitch:"C4" },
-        { id:createId(), rhythm:"e", pitchMode:"hold", pitch:"" },
-        { id:createId(), rhythm:"q", pitchMode:"change", pitch:"D4" },
-        { id:createId(), rhythm:"q.", pitchMode:"hold", pitch:"" }
-      ]
-    }
-  ]
+  barCount:8,
+  rows:[createRow(1)]
 };
 
 const rowsEl = document.getElementById("rows");
@@ -515,10 +673,6 @@ const timeTopEl = document.getElementById("timeTop");
 const timeBottomEl = document.getElementById("timeBottom");
 const barCountEl = document.getElementById("barCount");
 
-function createId(){
-  return Math.random().toString(36).slice(2,10);
-}
-
 function escapeHtml(value){
   return String(value)
     .replaceAll("&","&amp;")
@@ -526,6 +680,14 @@ function escapeHtml(value){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
+}
+
+function clamp(value, min, max){
+  return Math.max(min, Math.min(max, value));
+}
+
+function lerp(a, b, t){
+  return a + (b - a) * t;
 }
 
 function beatUnitQuarterValue(){
@@ -543,16 +705,24 @@ function formatBeats(value){
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
 }
 
-function patternBeats(row){
-  return row.blocks.reduce((total, block) => total + rhythmBeats(block.rhythm), 0);
+function patternBeats(cycle){
+  return cycle.blocks.reduce((total, block) => total + rhythmBeats(block.rhythm), 0);
 }
 
-function totalBeats(row){
-  return patternBeats(row) * Math.max(0, Number(row.cycles) || 0);
+function cycleBeats(cycle){
+  return patternBeats(cycle) * Math.max(0, Number(cycle.repetitions) || 0);
 }
 
-function pieceBeats(){
+function rowBeats(row){
+  return row.cycles.reduce((total, cycle) => total + cycleBeats(cycle), 0);
+}
+
+function gridBeats(){
   return state.timeTop * state.barCount;
+}
+
+function compositionBeats(){
+  return Math.max(gridBeats(), ...state.rows.map(rowBeats), 1);
 }
 
 function rhythmOptions(selected){
@@ -570,27 +740,40 @@ function pitchModeOptions(selected){
   }).join("");
 }
 
+function selectedCycle(row){
+  let cycle = row.cycles.find((candidate) => candidate.id === row.selectedCycleId);
+  if (!cycle){
+    cycle = row.cycles[0];
+    row.selectedCycleId = cycle ? cycle.id : null;
+  }
+  return cycle;
+}
+
+function cycleIndex(row, cycle){
+  return row.cycles.findIndex((candidate) => candidate.id === cycle.id);
+}
+
+function getBeatPx(){
+  return window.matchMedia("(max-width: 820px)").matches ? 38 : 44;
+}
+
 function render(){
   const beatPx = getBeatPx();
   const measurePx = state.timeTop * beatPx;
-  const timelineWidth = Math.ceil(pieceBeats() * beatPx);
+  const timelineWidth = Math.ceil(compositionBeats() * beatPx);
   timelineContentEl.style.setProperty("--beat-px", `${beatPx}px`);
   timelineContentEl.style.setProperty("--measure-px", `${measurePx}px`);
   timelineContentEl.style.setProperty("--timeline-w", `${timelineWidth}px`);
-  pieceLengthEl.textContent = `${state.barCount} bars / ${formatBeats(pieceBeats())} beats`;
+  pieceLengthEl.textContent = `${formatBeats(compositionBeats())} beats shown`;
   renderRuler(timelineWidth, beatPx);
   renderRows(beatPx);
 }
 
-function getBeatPx(){
-  return window.matchMedia("(max-width: 760px)").matches ? 38 : 44;
-}
-
 function renderRuler(timelineWidth, beatPx){
   const measureBeats = state.timeTop;
-  const total = pieceBeats();
+  const total = compositionBeats();
   const labels = [];
-  for (let measure = 0; measure < state.barCount; measure += 1){
+  for (let measure = 0; measure <= Math.ceil(total / measureBeats); measure += 1){
     const left = measure * measureBeats * beatPx;
     labels.push(`<span class="measure-label" style="left:${left}px">m${measure + 1}</span>`);
   }
@@ -611,11 +794,10 @@ function renderRows(beatPx){
 }
 
 function renderRow(row, beatPx){
-  const pattern = patternBeats(row);
-  const total = totalBeats(row);
-  const cycles = Math.max(0, Number(row.cycles) || 0);
-  const events = renderEvents(row, beatPx);
-  const cycleLines = renderCycleLines(pattern, cycles, beatPx);
+  const total = rowBeats(row);
+  const events = renderEvents(row, beatPx, row.collapsed);
+  const regions = renderCycleRegions(row, beatPx);
+  const lines = renderRepetitionLines(row, beatPx);
   if (row.collapsed){
     return `
       <section class="voice-row collapsed" data-row-id="${row.id}">
@@ -624,148 +806,420 @@ function renderRow(row, beatPx){
             <button class="icon" type="button" data-action="toggle-collapse" aria-label="Expand ${escapeHtml(row.name)}">+</button>
             <div class="voice-summary">
               <strong>${escapeHtml(row.name)}</strong>
-              <span>${cycles} cycles &middot; ${formatBeats(pattern)} beat pattern &middot; ${formatBeats(total)} beats total</span>
-              <div class="compact-sequence">${renderCompactSequence(row)}</div>
+              <span>${row.cycles.length} cycles &middot; ${formatBeats(total)} beats total</span>
+              <div class="compact-cycles">${renderCompactCycles(row)}</div>
             </div>
             <button class="icon danger" type="button" data-action="delete-row" aria-label="Delete ${escapeHtml(row.name)}">x</button>
           </div>
         </div>
         <div class="lane-cell">
-          <div class="lane-axis">${cycleLines}</div>
+          ${regions}
+          <div class="lane-axis">${lines}</div>
           ${events}
         </div>
       </section>
     `;
   }
-  const blocks = row.blocks.map((block, index) => renderBlockEditor(row, block, index)).join("");
+  const cycle = selectedCycle(row);
   return `
     <section class="voice-row" data-row-id="${row.id}">
       <div class="voice-editor">
         <div class="voice-head">
           <button class="icon" type="button" data-action="toggle-collapse" aria-label="Collapse ${escapeHtml(row.name)}">-</button>
-          <label>Name
-            <input data-field="name" value="${escapeHtml(row.name)}" autocomplete="off">
+          <label>Voice
+            <input data-scope="row" data-field="name" value="${escapeHtml(row.name)}" autocomplete="off">
           </label>
-          <label>Cycles
-            <input data-field="cycles" type="number" min="0" max="128" step="1" value="${escapeHtml(row.cycles)}">
-          </label>
+          <button class="icon" type="button" data-action="add-cycle" aria-label="Add cycle">+</button>
           <button class="icon danger" type="button" data-action="delete-row" aria-label="Delete ${escapeHtml(row.name)}">x</button>
         </div>
-        <div class="voice-stats">
-          <div class="stat"><span>Pattern</span><b>${formatBeats(pattern)} beats</b></div>
-          <div class="stat"><span>Total</span><b>${formatBeats(total)} beats</b></div>
-          <div class="stat"><span>Blocks</span><b>${row.blocks.length}</b></div>
-        </div>
-        <div class="block-list">
-          ${blocks}
-        </div>
-        <div class="row-actions">
-          <button type="button" data-action="add-block">+ Block</button>
-        </div>
+        ${renderCycleTabs(row)}
+        ${renderCycleEditor(row, cycle)}
       </div>
       <div class="lane-cell">
-        <div class="lane-axis">${cycleLines}</div>
+        ${regions}
+        <div class="lane-axis">${lines}</div>
         ${events}
       </div>
     </section>
   `;
 }
 
-function renderCompactSequence(row){
-  if (row.blocks.length === 0) return `<span class="rhythm-chip">empty</span>`;
-  return row.blocks.map((block) => {
-    const pitch = block.pitchMode === "change" && block.pitch.trim() ? `:${block.pitch.trim()}` : "";
-    return `<span class="rhythm-chip">${escapeHtml(block.rhythm + pitch)}</span>`;
-  }).join("");
+function renderCompactCycles(row){
+  return row.cycles.map((cycle) => `
+    <span class="cycle-chip" style="border-left-color:${cycle.color}">
+      ${escapeHtml(cycle.name)} · ${cycle.repetitions}x · ${cycle.entropy}%
+    </span>
+  `).join("");
 }
 
-function renderBlockEditor(row, block, index){
+function renderCycleTabs(row){
+  return `
+    <div class="cycle-tabs">
+      ${row.cycles.map((cycle) => {
+        const selected = cycle.id === row.selectedCycleId ? " selected" : "";
+        return `
+          <button class="cycle-tab${selected}" type="button" data-action="select-cycle" data-cycle-id="${cycle.id}">
+            <span class="swatch" style="background:${cycle.color}"></span>
+            <span>${escapeHtml(cycle.name)}</span>
+          </button>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderCycleEditor(row, cycle){
+  const index = cycleIndex(row, cycle);
+  const isLast = index === row.cycles.length - 1;
+  const pattern = patternBeats(cycle);
+  const total = cycleBeats(cycle);
+  const transitionMax = Math.max(0, Math.floor(Number(cycle.repetitions) || 0));
+  const transitionDisabled = isLast ? " disabled" : "";
+  const blocks = cycle.blocks.map((block, blockIndex) => renderBlockEditor(block, blockIndex)).join("");
+  return `
+    <div class="cycle-panel" data-cycle-id="${cycle.id}">
+      <div class="cycle-grid">
+        <label>Cycle
+          <input data-scope="cycle" data-field="name" value="${escapeHtml(cycle.name)}" autocomplete="off">
+        </label>
+        <label>Reps
+          <input data-scope="cycle" data-field="repetitions" type="number" min="1" max="128" step="1" value="${escapeHtml(cycle.repetitions)}">
+        </label>
+        <label>Entropy
+          <input data-scope="cycle" data-field="entropy" type="range" min="0" max="100" step="1" value="${escapeHtml(cycle.entropy)}">
+        </label>
+        <label>Transition reps
+          <input data-scope="cycle" data-field="transition" type="number" min="0" max="${transitionMax}" step="1" value="${escapeHtml(cycle.transition)}"${transitionDisabled}>
+        </label>
+        <label>Color
+          <input data-scope="cycle" data-field="color" type="color" value="${escapeHtml(cycle.color)}">
+        </label>
+      </div>
+      <div class="cycle-stats">
+        <div class="stat"><span>Pattern</span><b>${formatBeats(pattern)} beats</b></div>
+        <div class="stat"><span>Total</span><b>${formatBeats(total)} beats</b></div>
+        <div class="stat"><span>Entropy</span><b>${cycle.entropy}%</b></div>
+        <div class="stat"><span>Transition</span><b>${isLast ? "none" : `${cycle.transition} reps`}</b></div>
+      </div>
+      <div class="block-list">
+        ${blocks}
+      </div>
+      <div class="row-actions">
+        <button type="button" data-action="add-block">+ Block</button>
+        <button type="button" class="danger" data-action="delete-cycle"${row.cycles.length <= 1 ? " disabled" : ""}>Delete Cycle</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderBlockEditor(block, index){
   const pitchDisabled = block.pitchMode === "hold" ? " disabled" : "";
   const pitchValue = block.pitchMode === "hold" ? "" : block.pitch;
   const pitchPlaceholder = block.pitchMode === "hold" ? "held" : "C4";
   return `
     <div class="block-editor" data-block-id="${block.id}">
       <label>Rhythm
-        <select data-field="rhythm">${rhythmOptions(block.rhythm)}</select>
+        <select data-scope="block" data-field="rhythm">${rhythmOptions(block.rhythm)}</select>
       </label>
       <label>Pitch
-        <select data-field="pitchMode">${pitchModeOptions(block.pitchMode)}</select>
+        <select data-scope="block" data-field="pitchMode">${pitchModeOptions(block.pitchMode)}</select>
       </label>
       <label>Value
-        <input class="pitch-input" data-field="pitch" value="${escapeHtml(pitchValue)}" placeholder="${pitchPlaceholder}"${pitchDisabled} autocomplete="off">
+        <input class="pitch-input" data-scope="block" data-field="pitch" value="${escapeHtml(pitchValue)}" placeholder="${pitchPlaceholder}"${pitchDisabled} autocomplete="off">
       </label>
       <button class="icon danger" type="button" data-action="delete-block" aria-label="Delete block ${index + 1}">x</button>
     </div>
   `;
 }
 
-function renderCycleLines(pattern, cycles, beatPx){
-  if (pattern <= 0 || cycles <= 1) return "";
+function renderCycleRegions(row, beatPx){
+  let start = 0;
+  const selected = selectedCycle(row);
+  const regions = row.cycles.map((cycle, index) => {
+    const total = cycleBeats(cycle);
+    const width = Math.max(total * beatPx, 1);
+    const next = row.cycles[index + 1];
+    const pattern = patternBeats(cycle);
+    const transitionReps = next ? clamp(Number(cycle.transition) || 0, 0, cycle.repetitions) : 0;
+    const transitionBeats = transitionReps * pattern;
+    const transitionWidth = Math.min(width, transitionBeats * beatPx);
+    const selectedClass = selected && selected.id === cycle.id ? " selected" : "";
+    const region = `
+      <div class="cycle-region${selectedClass}"
+        data-action="select-cycle"
+        data-cycle-id="${cycle.id}"
+        style="left:${start * beatPx}px;width:${width}px;--cycle-color:${cycle.color};--cycle-bg:${rgba(cycle.color,.16)}">
+        <div class="cycle-region-label">
+          <span class="swatch" style="background:${cycle.color}"></span>
+          <span>${escapeHtml(cycle.name)}</span>
+          <small>${cycle.repetitions} reps · ${cycle.entropy}%</small>
+        </div>
+        ${next && transitionWidth > 0 ? `<div class="transition-band" style="width:${transitionWidth}px;--transition-bg:linear-gradient(to right,${rgba(cycle.color,.08)},${rgba(next.color,.26)})"></div>` : ""}
+      </div>
+    `;
+    start += total;
+    return region;
+  });
+  return regions.join("");
+}
+
+function renderRepetitionLines(row, beatPx){
+  let start = 0;
   const lines = [];
-  for (let cycle = 1; cycle < cycles; cycle += 1){
-    const left = pattern * cycle * beatPx;
-    lines.push(`<div class="cycle-line" style="left:${left}px"><span>c${cycle + 1}</span></div>`);
+  for (const cycle of row.cycles){
+    const pattern = patternBeats(cycle);
+    const repetitions = Math.max(0, Math.floor(Number(cycle.repetitions) || 0));
+    for (let rep = 1; rep <= repetitions; rep += 1){
+      const left = (start + pattern * rep) * beatPx;
+      const cls = rep === repetitions ? "repeat-line cycle-boundary" : "repeat-line";
+      lines.push(`<div class="${cls}" style="left:${left}px"></div>`);
+    }
+    start += pattern * repetitions;
   }
   return lines.join("");
 }
 
-function renderEvents(row, beatPx){
+function renderEvents(row, beatPx, collapsed){
+  const events = buildRowEvents(row);
+  return events.map((event) => {
+    const left = Math.max(0, event.start * beatPx);
+    const width = Math.max(event.duration * beatPx, collapsed ? 10 : 14);
+    const top = collapsed ? 40 + (event.lane % 2) * 17 : 56 + event.lane * 31;
+    const height = collapsed ? 18 : 28;
+    const addedClass = event.added ? " added" : "";
+    const label = event.added ? `+${event.rhythm}` : event.rhythm;
+    return `
+      <div class="event${addedClass}"
+        style="left:${left}px;top:${top}px;width:${width}px;height:${height}px;--event-bg:${rgba(event.color,.22)};--event-border:${rgba(event.color,.68)}">
+        <div class="event-inner">
+          <strong>${escapeHtml(label)}</strong>
+          <span>${escapeHtml(event.pitch || "--")}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function buildRowEvents(row){
+  const events = [];
+  let cycleStart = 0;
+  for (let cycleIndexValue = 0; cycleIndexValue < row.cycles.length; cycleIndexValue += 1){
+    const cycle = row.cycles[cycleIndexValue];
+    const next = row.cycles[cycleIndexValue + 1];
+    const pattern = patternBeats(cycle);
+    const repetitions = Math.max(0, Math.floor(Number(cycle.repetitions) || 0));
+    const cycleTotal = pattern * repetitions;
+    if (pattern <= 0 || repetitions <= 0){
+      cycleStart += cycleTotal;
+      continue;
+    }
+    const transitionReps = next ? clamp(Number(cycle.transition) || 0, 0, repetitions) : 0;
+    const transitionStart = Math.max(0, repetitions - transitionReps) * pattern;
+    const transitionBeats = transitionReps * pattern;
+    for (let rep = 0; rep < repetitions; rep += 1){
+      let blockStart = 0;
+      for (let blockIndexValue = 0; blockIndexValue < cycle.blocks.length; blockIndexValue += 1){
+        const block = cycle.blocks[blockIndexValue];
+        const baseDuration = rhythmBeats(block.rhythm);
+        const localStart = rep * pattern + blockStart;
+        const phase = pattern > 0 ? clamp((blockStart + baseDuration * .5) / pattern, 0, .999) : 0;
+        const mix = next && transitionBeats > 0 && localStart >= transitionStart
+          ? clamp((localStart - transitionStart + baseDuration * .5) / transitionBeats, 0, 1)
+          : 0;
+        const rng = mulberry32(hashString(`${row.id}|${cycle.id}|${rep}|${block.id}`));
+        const entropy = (next ? lerp(cycle.entropy, next.entropy, mix) : cycle.entropy) / 100;
+        const nextBlock = next ? blockAtPhase(next, phase) : null;
+        const skipChance = entropy * .14;
+        if (rng() >= skipChance){
+          let rhythm = block.rhythm;
+          let duration = baseDuration;
+          if (nextBlock && rng() < mix * .72){
+            rhythm = nextBlock.rhythm;
+          }
+          if (nextBlock){
+            duration = lerp(baseDuration, rhythmBeats(nextBlock.rhythm), mix * .65);
+          }
+          duration *= 1 + (rng() * 2 - 1) * entropy * .22;
+          duration = Math.max(.12, duration);
+
+          let pitch = pitchAtPhase(cycle, phase);
+          const nextPitch = next ? pitchAtPhase(next, phase) : "";
+          if (nextPitch && rng() < mix * .78){
+            pitch = nextPitch;
+          }
+          if (pitch && rng() < entropy * .28){
+            pitch = transposePitch(pitch, rng() < .5 ? -1 : 1);
+          }
+
+          const jitter = (rng() * 2 - 1) * Math.min(baseDuration * .33, .45) * entropy;
+          const start = clamp(cycleStart + localStart + jitter, cycleStart, cycleStart + cycleTotal - .05);
+          const color = next ? blendHex(cycle.color, next.color, mix) : cycle.color;
+          events.push({
+            start,
+            duration,
+            rhythm,
+            pitch,
+            color,
+            lane:Math.floor(rng() * 5),
+            added:false
+          });
+        }
+
+        if (rng() < entropy * .2){
+          const anchorPitch = pitchAtPhase(cycle, phase) || (next ? pitchAtPhase(next, phase) : "");
+          const addStart = cycleStart + localStart + baseDuration * (.2 + rng() * .65);
+          const addDuration = Math.max(.1, baseDuration * (.2 + rng() * .35));
+          const color = next ? blendHex(cycle.color, next.color, mix) : cycle.color;
+          events.push({
+            start:clamp(addStart, cycleStart, cycleStart + cycleTotal - .05),
+            duration:addDuration,
+            rhythm:block.rhythm,
+            pitch:anchorPitch ? transposePitch(anchorPitch, rng() < .5 ? -1 : 1) : "",
+            color,
+            lane:Math.floor(rng() * 5),
+            added:true
+          });
+        }
+
+        blockStart += baseDuration;
+      }
+    }
+    cycleStart += cycleTotal;
+  }
+  events.sort((a, b) => a.start - b.start);
+  return events;
+}
+
+function blockAtPhase(cycle, phase){
+  const pattern = patternBeats(cycle);
+  if (pattern <= 0 || cycle.blocks.length === 0) return null;
+  const target = clamp(phase, 0, .999) * pattern;
+  let start = 0;
+  for (const block of cycle.blocks){
+    const duration = rhythmBeats(block.rhythm);
+    if (target >= start && target < start + duration){
+      return block;
+    }
+    start += duration;
+  }
+  return cycle.blocks[cycle.blocks.length - 1];
+}
+
+function pitchAtPhase(cycle, phase){
+  const pattern = patternBeats(cycle);
+  if (pattern <= 0 || cycle.blocks.length === 0) return "";
+  const target = clamp(phase, 0, .999) * pattern;
   let start = 0;
   let currentPitch = "";
-  const events = [];
-  const cycles = Math.max(0, Number(row.cycles) || 0);
-  for (let cycle = 0; cycle < cycles; cycle += 1){
-    for (const block of row.blocks){
-      const duration = rhythmBeats(block.rhythm);
-      if (block.pitchMode === "change" && block.pitch.trim()){
-        currentPitch = block.pitch.trim();
-      }
-      const left = start * beatPx;
-      const width = Math.max(duration * beatPx, 14);
-      const pitchLabel = currentPitch || "--";
-      const changeClass = block.pitchMode === "change" ? " change" : "";
-      const pin = block.pitchMode === "change" ? `<i class="change-pin"></i>` : "";
-      events.push(`
-        <div class="event${changeClass}" style="left:${left}px;width:${width}px">
-          ${pin}
-          <div class="event-inner">
-            <strong>${escapeHtml(block.rhythm)}</strong>
-            <span>${escapeHtml(pitchLabel)}</span>
-          </div>
-        </div>
-      `);
-      start += duration;
+  for (const block of cycle.blocks){
+    if (block.pitchMode === "change" && block.pitch.trim()){
+      currentPitch = block.pitch.trim();
     }
+    const duration = rhythmBeats(block.rhythm);
+    if (target >= start && target < start + duration){
+      return currentPitch;
+    }
+    start += duration;
   }
-  return events.join("");
+  return currentPitch;
+}
+
+const NOTE_TO_PC = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const PC_TO_NOTE = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+
+function transposePitch(pitch, semitones){
+  const match = String(pitch).trim().match(/^([A-Ga-g])([#b]?)(-?\d+)$/);
+  if (!match) return pitch;
+  let pc = NOTE_TO_PC[match[1].toUpperCase()];
+  if (match[2] === "#") pc += 1;
+  if (match[2] === "b") pc -= 1;
+  const octave = Number(match[3]);
+  const midi = (octave + 1) * 12 + pc + semitones;
+  const nextPc = ((midi % 12) + 12) % 12;
+  const nextOctave = Math.floor(midi / 12) - 1;
+  return `${PC_TO_NOTE[nextPc]}${nextOctave}`;
+}
+
+function hashString(value){
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1){
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function mulberry32(seed){
+  return function(){
+    seed |= 0;
+    seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function hexToRgb(hex){
+  const clean = String(hex).replace("#","");
+  const value = Number.parseInt(clean.length === 3
+    ? clean.split("").map((char) => char + char).join("")
+    : clean, 16);
+  if (!Number.isFinite(value)) return {r:0,g:0,b:0};
+  return {
+    r:(value >> 16) & 255,
+    g:(value >> 8) & 255,
+    b:value & 255
+  };
+}
+
+function rgba(hex, alpha){
+  const rgb = hexToRgb(hex);
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
+}
+
+function blendHex(a, b, t){
+  const ar = hexToRgb(a);
+  const br = hexToRgb(b);
+  const r = Math.round(lerp(ar.r, br.r, t));
+  const g = Math.round(lerp(ar.g, br.g, t));
+  const blue = Math.round(lerp(ar.b, br.b, t));
+  return `#${[r,g,blue].map((value) => value.toString(16).padStart(2,"0")).join("")}`;
 }
 
 function findRow(id){
   return state.rows.find((row) => row.id === id);
 }
 
-function findBlock(row, id){
-  return row.blocks.find((block) => block.id === id);
+function findBlock(cycle, id){
+  return cycle.blocks.find((block) => block.id === id);
 }
 
 function addRow(){
-  const index = state.rows.length + 1;
-  state.rows.push({
-    id:createId(),
-    name:`Voice ${index}`,
-    cycles:4,
-    collapsed:false,
-    blocks:[
-      { id:createId(), rhythm:"q", pitchMode:"change", pitch:"C4" },
-      { id:createId(), rhythm:"e", pitchMode:"hold", pitch:"" },
-      { id:createId(), rhythm:"e", pitchMode:"change", pitch:"D4" }
-    ]
-  });
+  state.rows.push(createRow(state.rows.length + 1));
   render();
 }
 
-function addBlock(row){
-  row.blocks.push({ id:createId(), rhythm:"q", pitchMode:"hold", pitch:"" });
+function cloneCycle(source, index){
+  return createCycle({
+    name:`Cycle ${String.fromCharCode(65 + (index % 26))}`,
+    color:PALETTE[index % PALETTE.length],
+    repetitions:source.repetitions,
+    entropy:source.entropy,
+    transition:1,
+    blocks:source.blocks.map((block) => createBlock(block.rhythm, block.pitchMode, block.pitch))
+  });
+}
+
+function addCycle(row){
+  const source = selectedCycle(row);
+  const sourceIndex = cycleIndex(row, source);
+  const nextCycle = cloneCycle(source, row.cycles.length);
+  row.cycles.splice(sourceIndex + 1, 0, nextCycle);
+  row.selectedCycleId = nextCycle.id;
+}
+
+function addBlock(cycle){
+  cycle.blocks.push(createBlock("q","hold",""));
 }
 
 function handleRowChange(event){
@@ -774,37 +1228,55 @@ function handleRowChange(event){
   if (!rowEl) return;
   const row = findRow(rowEl.dataset.rowId);
   if (!row) return;
+  const cycle = selectedCycle(row);
   const blockEl = target.closest(".block-editor");
+
+  if (target.dataset.scope === "row" && target.dataset.field === "name"){
+    row.name = target.value.trim() || "Voice";
+    render();
+    return;
+  }
+
   if (blockEl){
-    const block = findBlock(row, blockEl.dataset.blockId);
+    const block = findBlock(cycle, blockEl.dataset.blockId);
     if (!block) return;
     if (target.dataset.field === "rhythm"){
       block.rhythm = target.value;
-      render();
     }
     if (target.dataset.field === "pitchMode"){
       block.pitchMode = target.value;
-      render();
     }
     if (target.dataset.field === "pitch"){
       block.pitch = target.value.trim();
-      render();
     }
+    render();
     return;
   }
-  if (target.dataset.field === "name"){
-    row.name = target.value.trim() || "Voice";
-    render();
-  }
-  if (target.dataset.field === "cycles"){
-    row.cycles = Math.max(0, Math.floor(Number(target.value) || 0));
+
+  if (target.dataset.scope === "cycle"){
+    if (target.dataset.field === "name"){
+      cycle.name = target.value.trim() || "Cycle";
+    }
+    if (target.dataset.field === "repetitions"){
+      cycle.repetitions = clamp(Math.floor(Number(target.value) || 1), 1, 128);
+      cycle.transition = clamp(cycle.transition, 0, cycle.repetitions);
+    }
+    if (target.dataset.field === "entropy"){
+      cycle.entropy = clamp(Math.floor(Number(target.value) || 0), 0, 100);
+    }
+    if (target.dataset.field === "transition"){
+      cycle.transition = clamp(Math.floor(Number(target.value) || 0), 0, cycle.repetitions);
+    }
+    if (target.dataset.field === "color" && /^#[0-9a-fA-F]{6}$/.test(target.value)){
+      cycle.color = target.value;
+    }
     render();
   }
 }
 
 function handleRowClick(event){
   const actionTarget = event.target.closest("[data-action]");
-  if (!actionTarget) return;
+  if (!actionTarget || actionTarget.disabled) return;
   const rowEl = actionTarget.closest(".voice-row");
   const row = rowEl ? findRow(rowEl.dataset.rowId) : null;
   if (actionTarget.dataset.action === "delete-row" && row){
@@ -815,21 +1287,42 @@ function handleRowClick(event){
     row.collapsed = !row.collapsed;
     render();
   }
+  if (actionTarget.dataset.action === "add-cycle" && row){
+    addCycle(row);
+    render();
+  }
+  if (actionTarget.dataset.action === "select-cycle" && row){
+    row.selectedCycleId = actionTarget.dataset.cycleId;
+    render();
+  }
+  if (actionTarget.dataset.action === "delete-cycle" && row){
+    if (row.cycles.length <= 1) return;
+    const cycle = selectedCycle(row);
+    const index = cycleIndex(row, cycle);
+    row.cycles = row.cycles.filter((candidate) => candidate.id !== cycle.id);
+    row.selectedCycleId = row.cycles[Math.max(0, Math.min(index, row.cycles.length - 1))].id;
+    render();
+  }
   if (actionTarget.dataset.action === "add-block" && row){
-    addBlock(row);
+    addBlock(selectedCycle(row));
     render();
   }
   if (actionTarget.dataset.action === "delete-block" && row){
+    const cycle = selectedCycle(row);
     const blockEl = actionTarget.closest(".block-editor");
-    row.blocks = row.blocks.filter((block) => block.id !== blockEl.dataset.blockId);
+    if (!blockEl) return;
+    cycle.blocks = cycle.blocks.filter((block) => block.id !== blockEl.dataset.blockId);
+    if (cycle.blocks.length === 0){
+      addBlock(cycle);
+    }
     render();
   }
 }
 
 function updatePieceSettings(){
-  state.timeTop = Math.max(1, Math.floor(Number(timeTopEl.value) || 1));
-  state.timeBottom = Math.max(1, Math.floor(Number(timeBottomEl.value) || 4));
-  state.barCount = Math.max(1, Math.floor(Number(barCountEl.value) || 1));
+  state.timeTop = clamp(Math.floor(Number(timeTopEl.value) || 1), 1, 24);
+  state.timeBottom = clamp(Math.floor(Number(timeBottomEl.value) || 4), 1, 32);
+  state.barCount = clamp(Math.floor(Number(barCountEl.value) || 1), 1, 512);
   timeTopEl.value = state.timeTop;
   barCountEl.value = state.barCount;
   render();
