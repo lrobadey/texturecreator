@@ -29,7 +29,11 @@
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%}
   body{
+    height:100vh;
     min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
     background:var(--bg);
     color:var(--ink);
     font:13px/1.45 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
@@ -122,24 +126,99 @@
   }
   .toolbar{
     display:flex;
-    align-items:end;
+    align-items:center;
     gap:10px;
     flex-wrap:wrap;
     margin-left:auto;
   }
-  .sig{
-    display:grid;
-    grid-template-columns:70px 16px 82px;
-    align-items:end;
-    gap:6px;
-    min-width:178px;
+  .composer-control{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
   }
-  .slash{
-    min-height:32px;
-    display:grid;
-    place-items:center;
+  .control-title{
     color:var(--muted);
-    font-weight:750;
+    font-size:10px;
+    font-weight:700;
+    line-height:1;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .sig{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:3px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--panel);
+  }
+  .stepper{
+    display:grid;
+    grid-template-columns:28px minmax(34px,auto) 28px;
+    align-items:center;
+    min-height:32px;
+    border:1px solid transparent;
+    border-radius:999px;
+    background:var(--panel-2);
+  }
+  .stepper:focus-within{
+    border-color:var(--line-strong);
+    background:var(--panel);
+  }
+  .stepper button,
+  .unit-option{
+    min-height:28px;
+    border:0;
+    background:transparent;
+  }
+  .stepper button{
+    width:28px;
+    padding:0;
+    border-radius:999px;
+    color:var(--muted);
+    font-size:15px;
+    font-weight:760;
+  }
+  .stepper button:hover,
+  .unit-option:hover{
+    background:var(--panel-3);
+    border-color:transparent;
+  }
+  .stepper-value{
+    min-width:32px;
+    text-align:center;
+    font-size:14px;
+    font-weight:780;
+    font-variant-numeric:tabular-nums;
+  }
+  .signature-mark{
+    color:var(--muted);
+    font-size:15px;
+    font-weight:780;
+    line-height:1;
+  }
+  .unit-options{
+    display:flex;
+    gap:2px;
+    padding:2px;
+    border-radius:999px;
+    background:var(--panel-3);
+  }
+  .unit-option{
+    min-width:29px;
+    padding:0 7px;
+    border-radius:999px;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:720;
+  }
+  .unit-option.active{
+    background:var(--accent);
+    color:var(--accent-ink);
+  }
+  .bar-control .stepper{
+    grid-template-columns:30px 50px 30px;
   }
   .metric{
     min-width:170px;
@@ -162,9 +241,14 @@
     font-variant-numeric:tabular-nums;
     white-space:nowrap;
   }
-  .bar-count{width:82px}
+  .tempo-unit{width:76px}
+  .tempo-bpm{width:88px}
+  .transport-button{
+    min-width:72px;
+  }
   .board{
-    height:calc(100vh - 65px);
+    flex:1 1 0;
+    min-height:0;
     overflow:auto;
     background:var(--bg);
   }
@@ -465,6 +549,16 @@
   .repeat-line.cycle-boundary{
     border-left:1px solid rgba(35,33,30,.24);
   }
+  .playhead{
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:2px;
+    background:#161514;
+    box-shadow:0 0 0 1px rgba(255,255,255,.65), 0 0 12px rgba(35,33,30,.18);
+    z-index:8;
+    pointer-events:none;
+  }
   .voice-row.collapsed .repeat-line{
     top:26px;
   }
@@ -525,8 +619,13 @@
     :root{--editor-w:350px;--beat-px:38px}
     .topbar{align-items:flex-start;flex-direction:column}
     .toolbar{margin-left:0;width:100%}
+    .sig{gap:5px}
+    .sig .stepper{grid-template-columns:26px 30px 26px}
+    .sig .unit-option{
+      min-width:26px;
+      padding:0 5px;
+    }
     .metric{min-width:132px}
-    .board{height:calc(100vh - 194px)}
     .voice-head{grid-template-columns:32px minmax(0,1fr) 32px 32px}
     .cycle-grid{grid-template-columns:1fr 1fr}
     .cycle-stats{grid-template-columns:1fr 1fr}
@@ -541,27 +640,50 @@
     <p>Voice cycles over a composed grid</p>
   </div>
   <div class="toolbar">
-    <div class="sig" aria-label="Time signature">
-      <label>Beats
-        <input id="timeTop" type="number" min="1" max="24" step="1" value="4">
-      </label>
-      <div class="slash">/</div>
-      <label>Unit
-        <select id="timeBottom">
-          <option value="4" selected>4</option>
-          <option value="8">8</option>
-          <option value="16">16</option>
-          <option value="2">2</option>
-        </select>
-      </label>
+    <div class="composer-control">
+      <span class="control-title">Time</span>
+      <div class="sig" aria-label="Time signature">
+        <div class="stepper" role="group" aria-label="Beats per bar">
+          <button type="button" data-adjust="timeTop" data-delta="-1" aria-label="Decrease beats">&minus;</button>
+          <output id="timeTopValue" class="stepper-value" aria-live="polite">4</output>
+          <button type="button" data-adjust="timeTop" data-delta="1" aria-label="Increase beats">+</button>
+        </div>
+        <span class="signature-mark">/</span>
+        <div class="unit-options" role="group" aria-label="Beat unit">
+          <button class="unit-option" type="button" data-time-bottom="2">2</button>
+          <button class="unit-option active" type="button" data-time-bottom="4">4</button>
+          <button class="unit-option" type="button" data-time-bottom="8">8</button>
+          <button class="unit-option" type="button" data-time-bottom="16">16</button>
+        </div>
+      </div>
     </div>
-    <label class="bar-count">Bars
-      <input id="barCount" type="number" min="1" max="512" step="1" value="8">
+    <div class="composer-control bar-control">
+      <span class="control-title">Bars</span>
+      <div class="stepper" role="group" aria-label="Bar count">
+        <button type="button" data-adjust="barCount" data-delta="-1" aria-label="Decrease bars">&minus;</button>
+        <output id="barCountValue" class="stepper-value" aria-live="polite">8</output>
+        <button type="button" data-adjust="barCount" data-delta="1" aria-label="Increase bars">+</button>
+      </div>
+    </div>
+    <label class="tempo-unit">Tempo unit
+      <select id="tempoUnit">
+        <option value="s">s</option>
+        <option value="e">e</option>
+        <option value="e.">e.</option>
+        <option value="q" selected>q</option>
+        <option value="q.">q.</option>
+        <option value="h">h</option>
+        <option value="h.">h.</option>
+      </select>
+    </label>
+    <label class="tempo-bpm">Tempo
+      <input id="tempoBpm" type="number" min="20" max="240" step="1" value="60">
     </label>
     <div class="metric">
       <span>Timeline</span>
       <b id="pieceLength">0 beats</b>
     </div>
+    <button id="playBtn" class="primary transport-button" type="button">Play</button>
     <button id="addRowTop" class="primary" type="button">+ Voice</button>
   </div>
 </header>
@@ -662,16 +784,34 @@ const state = {
   timeTop:4,
   timeBottom:4,
   barCount:8,
+  tempoUnit:"q",
+  tempoBpm:60,
   rows:[createRow(1)]
 };
+
+const transport = {
+  playing:false,
+  beat:0,
+  startedAt:0,
+  startedBeat:0,
+  raf:0,
+  schedIdx:0,
+  events:[]
+};
+let audioCtx = null;
+let masterGain = null;
 
 const rowsEl = document.getElementById("rows");
 const rulerEl = document.getElementById("ruler");
 const timelineContentEl = document.getElementById("timelineContent");
 const pieceLengthEl = document.getElementById("pieceLength");
-const timeTopEl = document.getElementById("timeTop");
-const timeBottomEl = document.getElementById("timeBottom");
-const barCountEl = document.getElementById("barCount");
+const timeTopValueEl = document.getElementById("timeTopValue");
+const barCountValueEl = document.getElementById("barCountValue");
+const tempoUnitEl = document.getElementById("tempoUnit");
+const tempoBpmEl = document.getElementById("tempoBpm");
+const playBtn = document.getElementById("playBtn");
+const timeBottomButtons = Array.from(document.querySelectorAll("[data-time-bottom]"));
+const settingAdjustButtons = Array.from(document.querySelectorAll("[data-adjust]"));
 
 function escapeHtml(value){
   return String(value)
@@ -694,6 +834,24 @@ function beatUnitQuarterValue(){
   return 4 / state.timeBottom;
 }
 
+function tempoUnitQuarterValue(){
+  return rhythmByToken.get(state.tempoUnit)?.quarterBeats || 1;
+}
+
+function secondsPerBeat(){
+  const secondsPerTempoUnit = 60 / state.tempoBpm;
+  const secondsPerQuarter = secondsPerTempoUnit / tempoUnitQuarterValue();
+  return secondsPerQuarter * beatUnitQuarterValue();
+}
+
+function beatsToSeconds(beats){
+  return beats * secondsPerBeat();
+}
+
+function secondsToBeats(seconds){
+  return seconds / secondsPerBeat();
+}
+
 function rhythmBeats(token){
   const rhythm = rhythmByToken.get(token) || rhythmByToken.get("q");
   return rhythm.quarterBeats / beatUnitQuarterValue();
@@ -703,6 +861,14 @@ function formatBeats(value){
   if (!Number.isFinite(value)) return "0";
   const rounded = Math.round(value * 100) / 100;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
+}
+
+function formatSeconds(value){
+  if (!Number.isFinite(value)) return "0:00";
+  const total = Math.max(0, Math.round(value));
+  const minutes = Math.floor(total / 60);
+  const seconds = String(total % 60).padStart(2,"0");
+  return `${minutes}:${seconds}`;
 }
 
 function patternBeats(cycle){
@@ -723,6 +889,27 @@ function gridBeats(){
 
 function compositionBeats(){
   return Math.max(gridBeats(), ...state.rows.map(rowBeats), 1);
+}
+
+function syncPieceControls(){
+  timeTopValueEl.textContent = state.timeTop;
+  barCountValueEl.textContent = state.barCount;
+  tempoUnitEl.value = state.tempoUnit;
+  tempoBpmEl.value = state.tempoBpm;
+  playBtn.textContent = transport.playing ? "Pause" : "Play";
+  timeBottomButtons.forEach((button) => {
+    const active = Number(button.dataset.timeBottom) === state.timeBottom;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  settingAdjustButtons.forEach((button) => {
+    const field = button.dataset.adjust;
+    const delta = Number(button.dataset.delta) || 0;
+    const value = state[field];
+    const min = field === "timeTop" ? 1 : 1;
+    const max = field === "timeTop" ? 24 : 512;
+    button.disabled = value + delta < min || value + delta > max;
+  });
 }
 
 function rhythmOptions(selected){
@@ -758,13 +945,14 @@ function getBeatPx(){
 }
 
 function render(){
+  syncPieceControls();
   const beatPx = getBeatPx();
   const measurePx = state.timeTop * beatPx;
   const timelineWidth = Math.ceil(compositionBeats() * beatPx);
   timelineContentEl.style.setProperty("--beat-px", `${beatPx}px`);
   timelineContentEl.style.setProperty("--measure-px", `${measurePx}px`);
   timelineContentEl.style.setProperty("--timeline-w", `${timelineWidth}px`);
-  pieceLengthEl.textContent = `${formatBeats(compositionBeats())} beats shown`;
+  pieceLengthEl.textContent = `${formatBeats(compositionBeats())} beats · ${formatSeconds(beatsToSeconds(compositionBeats()))}`;
   renderRuler(timelineWidth, beatPx);
   renderRows(beatPx);
 }
@@ -798,6 +986,7 @@ function renderRow(row, beatPx){
   const events = renderEvents(row, beatPx, row.collapsed);
   const regions = renderCycleRegions(row, beatPx);
   const lines = renderRepetitionLines(row, beatPx);
+  const playhead = renderPlayhead(beatPx);
   if (row.collapsed){
     return `
       <section class="voice-row collapsed" data-row-id="${row.id}">
@@ -815,6 +1004,7 @@ function renderRow(row, beatPx){
         <div class="lane-cell">
           ${regions}
           <div class="lane-axis">${lines}</div>
+          ${playhead}
           ${events}
         </div>
       </section>
@@ -838,10 +1028,17 @@ function renderRow(row, beatPx){
       <div class="lane-cell">
         ${regions}
         <div class="lane-axis">${lines}</div>
+        ${playhead}
         ${events}
       </div>
     </section>
   `;
+}
+
+function renderPlayhead(beatPx){
+  if (!transport.playing && transport.beat <= 0) return "";
+  const left = clamp(transport.beat, 0, compositionBeats()) * beatPx;
+  return `<div class="playhead" style="left:${left}px"></div>`;
 }
 
 function renderCompactCycles(row){
@@ -1090,6 +1287,130 @@ function buildRowEvents(row){
   return events;
 }
 
+function buildPlaybackEvents(){
+  const events = [];
+  for (const row of state.rows){
+    for (const event of buildRowEvents(row)){
+      const midi = pitchToMidi(event.pitch);
+      if (midi === null) continue;
+      events.push({
+        start:event.start,
+        duration:event.duration,
+        midi,
+        color:event.color
+      });
+    }
+  }
+  events.sort((a, b) => a.start - b.start);
+  return events;
+}
+
+function ensureAudio(){
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.72;
+  masterGain.connect(audioCtx.destination);
+}
+
+function startTransport(){
+  ensureAudio();
+  audioCtx.resume();
+  transport.events = buildPlaybackEvents();
+  transport.schedIdx = transport.events.findIndex((event) => event.start >= transport.beat);
+  if (transport.schedIdx < 0) transport.schedIdx = transport.events.length;
+  transport.startedBeat = transport.beat;
+  transport.startedAt = audioCtx.currentTime;
+  transport.playing = true;
+  tickTransport();
+}
+
+function pauseTransport(){
+  transport.playing = false;
+  cancelAnimationFrame(transport.raf);
+  render();
+}
+
+function toggleTransport(){
+  if (transport.playing){
+    pauseTransport();
+  } else {
+    if (transport.beat >= compositionBeats()) transport.beat = 0;
+    startTransport();
+  }
+}
+
+function resyncTransportAfterEdit(){
+  if (!transport.playing) return;
+  transport.startedBeat = clamp(transport.beat, 0, compositionBeats());
+  transport.startedAt = audioCtx.currentTime;
+  transport.events = buildPlaybackEvents();
+  transport.schedIdx = transport.events.findIndex((event) => event.start >= transport.beat);
+  if (transport.schedIdx < 0) transport.schedIdx = transport.events.length;
+}
+
+function renderAfterScoreEdit(){
+  transport.beat = clamp(transport.beat, 0, compositionBeats());
+  resyncTransportAfterEdit();
+  render();
+}
+
+function tickTransport(){
+  if (!transport.playing) return;
+  const elapsed = audioCtx.currentTime - transport.startedAt;
+  transport.beat = transport.startedBeat + secondsToBeats(elapsed);
+  if (transport.beat >= compositionBeats()){
+    transport.beat = compositionBeats();
+    pauseTransport();
+    return;
+  }
+  schedulePlayback();
+  render();
+  transport.raf = requestAnimationFrame(tickTransport);
+}
+
+function schedulePlayback(){
+  const lookaheadSeconds = .18;
+  const lookaheadBeats = secondsToBeats(lookaheadSeconds);
+  const horizon = transport.beat + lookaheadBeats;
+  const now = audioCtx.currentTime;
+  while (transport.schedIdx < transport.events.length && transport.events[transport.schedIdx].start <= horizon){
+    const event = transport.events[transport.schedIdx];
+    transport.schedIdx += 1;
+    if (event.start < transport.beat - .02) continue;
+    const when = now + beatsToSeconds(event.start - transport.beat);
+    playPianoTone(when, beatsToSeconds(event.duration), event.midi);
+  }
+}
+
+function playPianoTone(when, duration, midi){
+  const freq = 440 * Math.pow(2, (midi - 69) / 12);
+  const voiceGain = audioCtx.createGain();
+  const body = audioCtx.createOscillator();
+  const shine = audioCtx.createOscillator();
+  const filter = audioCtx.createBiquadFilter();
+  const safeDuration = clamp(duration, .08, 8);
+  body.type = "triangle";
+  shine.type = "sine";
+  body.frequency.setValueAtTime(freq, when);
+  shine.frequency.setValueAtTime(freq * 2.01, when);
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(2600, when);
+  filter.frequency.exponentialRampToValueAtTime(900, when + Math.min(.7, safeDuration));
+  voiceGain.gain.setValueAtTime(.0001, when);
+  voiceGain.gain.exponentialRampToValueAtTime(.16, when + .012);
+  voiceGain.gain.exponentialRampToValueAtTime(.055, when + Math.min(.28, safeDuration * .55));
+  voiceGain.gain.exponentialRampToValueAtTime(.0001, when + safeDuration);
+  body.connect(filter);
+  shine.connect(filter);
+  filter.connect(voiceGain);
+  voiceGain.connect(masterGain);
+  body.start(when);
+  shine.start(when);
+  body.stop(when + safeDuration + .08);
+  shine.stop(when + safeDuration + .08);
+}
+
 function blockAtPhase(cycle, phase){
   const pattern = patternBeats(cycle);
   if (pattern <= 0 || cycle.blocks.length === 0) return null;
@@ -1127,14 +1448,19 @@ function pitchAtPhase(cycle, phase){
 const NOTE_TO_PC = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 const PC_TO_NOTE = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 
-function transposePitch(pitch, semitones){
-  const match = String(pitch).trim().match(/^([A-Ga-g])([#b]?)(-?\d+)$/);
-  if (!match) return pitch;
+function pitchToMidi(pitch){
+  const match = String(pitch || "").trim().match(/^([A-Ga-g])([#b]?)(-?\d+)$/);
+  if (!match) return null;
   let pc = NOTE_TO_PC[match[1].toUpperCase()];
   if (match[2] === "#") pc += 1;
   if (match[2] === "b") pc -= 1;
-  const octave = Number(match[3]);
-  const midi = (octave + 1) * 12 + pc + semitones;
+  return (Number(match[3]) + 1) * 12 + pc;
+}
+
+function transposePitch(pitch, semitones){
+  const baseMidi = pitchToMidi(pitch);
+  if (baseMidi === null) return pitch;
+  const midi = baseMidi + semitones;
   const nextPc = ((midi % 12) + 12) % 12;
   const nextOctave = Math.floor(midi / 12) - 1;
   return `${PC_TO_NOTE[nextPc]}${nextOctave}`;
@@ -1196,7 +1522,7 @@ function findBlock(cycle, id){
 
 function addRow(){
   state.rows.push(createRow(state.rows.length + 1));
-  render();
+  renderAfterScoreEdit();
 }
 
 function cloneCycle(source, index){
@@ -1233,7 +1559,7 @@ function handleRowChange(event){
 
   if (target.dataset.scope === "row" && target.dataset.field === "name"){
     row.name = target.value.trim() || "Voice";
-    render();
+    renderAfterScoreEdit();
     return;
   }
 
@@ -1249,7 +1575,7 @@ function handleRowChange(event){
     if (target.dataset.field === "pitch"){
       block.pitch = target.value.trim();
     }
-    render();
+    renderAfterScoreEdit();
     return;
   }
 
@@ -1270,7 +1596,7 @@ function handleRowChange(event){
     if (target.dataset.field === "color" && /^#[0-9a-fA-F]{6}$/.test(target.value)){
       cycle.color = target.value;
     }
-    render();
+    renderAfterScoreEdit();
   }
 }
 
@@ -1281,7 +1607,7 @@ function handleRowClick(event){
   const row = rowEl ? findRow(rowEl.dataset.rowId) : null;
   if (actionTarget.dataset.action === "delete-row" && row){
     state.rows = state.rows.filter((candidate) => candidate.id !== row.id);
-    render();
+    renderAfterScoreEdit();
   }
   if (actionTarget.dataset.action === "toggle-collapse" && row){
     row.collapsed = !row.collapsed;
@@ -1289,7 +1615,7 @@ function handleRowClick(event){
   }
   if (actionTarget.dataset.action === "add-cycle" && row){
     addCycle(row);
-    render();
+    renderAfterScoreEdit();
   }
   if (actionTarget.dataset.action === "select-cycle" && row){
     row.selectedCycleId = actionTarget.dataset.cycleId;
@@ -1301,11 +1627,11 @@ function handleRowClick(event){
     const index = cycleIndex(row, cycle);
     row.cycles = row.cycles.filter((candidate) => candidate.id !== cycle.id);
     row.selectedCycleId = row.cycles[Math.max(0, Math.min(index, row.cycles.length - 1))].id;
-    render();
+    renderAfterScoreEdit();
   }
   if (actionTarget.dataset.action === "add-block" && row){
     addBlock(selectedCycle(row));
-    render();
+    renderAfterScoreEdit();
   }
   if (actionTarget.dataset.action === "delete-block" && row){
     const cycle = selectedCycle(row);
@@ -1315,26 +1641,47 @@ function handleRowClick(event){
     if (cycle.blocks.length === 0){
       addBlock(cycle);
     }
-    render();
+    renderAfterScoreEdit();
   }
 }
 
-function updatePieceSettings(){
-  state.timeTop = clamp(Math.floor(Number(timeTopEl.value) || 1), 1, 24);
-  state.timeBottom = clamp(Math.floor(Number(timeBottomEl.value) || 4), 1, 32);
-  state.barCount = clamp(Math.floor(Number(barCountEl.value) || 1), 1, 512);
-  timeTopEl.value = state.timeTop;
-  barCountEl.value = state.barCount;
-  render();
+function updatePieceSetting(field, value){
+  if (field === "timeTop"){
+    state.timeTop = clamp(Math.floor(value) || 1, 1, 24);
+  } else if (field === "timeBottom"){
+    state.timeBottom = clamp(Math.floor(value) || 4, 1, 32);
+  } else if (field === "barCount"){
+    state.barCount = clamp(Math.floor(value) || 1, 1, 512);
+  } else if (field === "tempoUnit"){
+    state.tempoUnit = rhythmByToken.has(value) ? value : "q";
+  } else if (field === "tempoBpm"){
+    state.tempoBpm = clamp(Math.floor(value) || 60, 20, 240);
+  }
+  renderAfterScoreEdit();
 }
 
 rowsEl.addEventListener("change", handleRowChange);
 rowsEl.addEventListener("click", handleRowClick);
 document.getElementById("addRowTop").addEventListener("click", addRow);
 document.getElementById("addRowCorner").addEventListener("click", addRow);
-timeTopEl.addEventListener("change", updatePieceSettings);
-timeBottomEl.addEventListener("change", updatePieceSettings);
-barCountEl.addEventListener("change", updatePieceSettings);
+settingAdjustButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const field = button.dataset.adjust;
+    updatePieceSetting(field, state[field] + (Number(button.dataset.delta) || 0));
+  });
+});
+timeBottomButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    updatePieceSetting("timeBottom", Number(button.dataset.timeBottom));
+  });
+});
+tempoUnitEl.addEventListener("change", () => {
+  updatePieceSetting("tempoUnit", tempoUnitEl.value);
+});
+tempoBpmEl.addEventListener("change", () => {
+  updatePieceSetting("tempoBpm", Number(tempoBpmEl.value));
+});
+playBtn.addEventListener("click", toggleTransport);
 window.addEventListener("resize", render);
 
 render();
